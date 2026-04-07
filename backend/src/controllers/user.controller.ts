@@ -1,6 +1,31 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
+import Class from '../models/class.model';
 import bcrypt from 'bcrypt';
+
+const getStudentClassId = (details: unknown): string | undefined => {
+  if (!details || typeof details !== 'object') {
+    return undefined;
+  }
+
+  const maybeClassId = (details as { classId?: unknown }).classId;
+  return typeof maybeClassId === 'string' && maybeClassId.trim() ? maybeClassId : undefined;
+};
+
+const syncStudentMembership = async (userId: string, classId?: string) => {
+  await Class.updateMany(
+    { studentIds: userId },
+    { $pull: { studentIds: userId } }
+  );
+
+  if (classId) {
+    await Class.findByIdAndUpdate(
+      classId,
+      { $addToSet: { studentIds: userId } },
+      { new: true }
+    );
+  }
+};
 
 // 🔹 Get all users
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -53,6 +78,9 @@ export const createUser = async (req: Request, res: Response) => {
     const newUser = new User({
       _id: userData._id || userData.id,
       name: name,
+      firstName: userData.firstName || '',
+      middleName: userData.middleName || '',
+      lastName: userData.lastName || '',
       email: userData.email,
       password: hashedPassword,
       role: userData.role,
@@ -60,6 +88,9 @@ export const createUser = async (req: Request, res: Response) => {
     });
 
     await newUser.save();
+    if (newUser.role === 'S') {
+      await syncStudentMembership(String(newUser._id), getStudentClassId(newUser.details));
+    }
     
     console.log('User created successfully:', newUser._id);
 
@@ -90,6 +121,9 @@ export const bulkAddUsers = async (req: Request, res: Response) => {
         return {
           _id: user._id || user.id,
           name: name,
+          firstName: user.firstName || '',
+          middleName: user.middleName || '',
+          lastName: user.lastName || '',
           email: user.email,
           password: hashedPassword,
           role: user.role,
@@ -99,6 +133,12 @@ export const bulkAddUsers = async (req: Request, res: Response) => {
     );
 
     const result = await User.insertMany(formattedUsers);
+
+    await Promise.all(
+      result
+        .filter((user: any) => user.role === 'S')
+        .map((user: any) => syncStudentMembership(String(user._id), user.details?.classId))
+    );
 
     console.log(`Successfully added ${result.length} users`);
 
@@ -123,6 +163,9 @@ export const updateUser = async (req: Request, res: Response) => {
     // Build name if firstName/lastName provided
     if (userData.firstName || userData.lastName) {
       userData.name = `${userData.firstName || ''} ${userData.middleName || ''} ${userData.lastName || ''}`.trim();
+      userData.firstName = userData.firstName || '';
+      userData.middleName = userData.middleName || '';
+      userData.lastName = userData.lastName || '';
     }
     
     // If password is being updated, hash it
@@ -138,6 +181,10 @@ export const updateUser = async (req: Request, res: Response) => {
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (updatedUser.role === 'S') {
+      await syncStudentMembership(String(updatedUser._id), getStudentClassId(updatedUser.details));
     }
 
     console.log('User updated successfully:', updatedUser._id);
@@ -158,6 +205,10 @@ export const deleteUser = async (req: Request, res: Response) => {
     
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (deletedUser.role === 'S') {
+      await syncStudentMembership(String(deletedUser._id));
     }
 
     console.log('User deleted successfully:', req.params.id);

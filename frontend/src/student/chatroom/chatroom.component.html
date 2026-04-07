@@ -19,17 +19,17 @@
       <div #scrollContainer class="card-body chat-body p-4 bg-body-secondary">
         @if(messages$ | async; as messages) {
           <div class="vstack gap-3">
-            @for(message of messages; track message.id) {
-              <div class="d-flex gap-3" [class.justify-content-end]="message.senderId === currentUser.id">
-                @if(message.senderId !== currentUser.id) {
+            @for(message of messages; track message.id || message._id) {
+              <div class="d-flex gap-3" [class.justify-content-end]="message.senderId === (currentUser.id || currentUser._id)">
+                @if(message.senderId !== (currentUser.id || currentUser._id)) {
                    <img [src]="message.senderAvatar" alt="avatar" class="rounded-circle" width="32" height="32">
                 }
                 <div class="chat-bubble p-3 rounded-3 shadow-sm" 
-                    [class.bg-danger]="message.senderId === currentUser.id" 
-                    [class.text-white]="message.senderId === currentUser.id" 
-                    [class.bg-white]="message.senderId !== currentUser.id">
+                    [class.bg-danger]="message.senderId === (currentUser.id || currentUser._id)" 
+                    [class.text-white]="message.senderId === (currentUser.id || currentUser._id)" 
+                    [class.bg-white]="message.senderId !== (currentUser.id || currentUser._id)">
                   <p class="small mb-0">{{ message.text }}</p>
-                  <p class="chat-meta text-end small mt-1" [class.text-white-50]="message.senderId === currentUser.id">
+                  <p class="chat-meta text-end small mt-1" [class.text-white-50]="message.senderId === (currentUser.id || currentUser._id)">
                     {{ message.senderName }} &bull; {{ message.timestamp | date:'shortTime' }}
                   </p>
                 </div>

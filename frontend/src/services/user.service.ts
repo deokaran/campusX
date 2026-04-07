@@ -64,10 +64,26 @@ export class UserService {
     this.http.get<User[]>(this.apiUrl).subscribe({
       next: (users) => {
         console.log('Loaded users from backend:', users.length);
-        this.usersSubject.next(users);
+        this.usersSubject.next(users.map(u => this.normalizeUser(u)));
       },
       error: (error) => console.error('Error loading users:', error)
     });
+  }
+
+  private normalizeUser(u: any): User {
+    // Ensure id is always set from _id
+    const id = u.id || u._id || '';
+    // If backend only stored 'name', split it into firstName/lastName
+    let firstName = u.firstName || '';
+    let middleName = u.middleName || '';
+    let lastName = u.lastName || '';
+    if (!firstName && !lastName && u.name) {
+      const parts = u.name.trim().split(' ');
+      firstName = parts[0] || '';
+      lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+      middleName = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+    }
+    return { ...u, id, _id: id, firstName, middleName, lastName };
   }
 
   // BACKWARD COMPATIBLE SYNCHRONOUS METHODS
@@ -103,7 +119,7 @@ export class UserService {
       next: (newUser) => {
         console.log('User added successfully:', newUser);
         const currentUsers = this.usersSubject.getValue();
-        this.usersSubject.next([...currentUsers, newUser]);
+        this.usersSubject.next([...currentUsers, this.normalizeUser(newUser)]);
       },
       error: (error) => {
         console.error('Error adding user:', error);
@@ -122,7 +138,7 @@ export class UserService {
         const currentUsers = this.usersSubject.getValue();
         const index = currentUsers.findIndex(u => (u.id || u._id) === userId);
         if (index !== -1) {
-          currentUsers[index] = user;
+          currentUsers[index] = this.normalizeUser(user);
           this.usersSubject.next([...currentUsers]);
         }
       },
@@ -162,6 +178,15 @@ export class UserService {
     }
   }
 
+  getStudentMenuForUser(user: User | null): MenuItem[] {
+    const hasClass = !!user?.details?.classId;
+
+    return this.studentMenu.map(item => ({
+      ...item,
+      disabled: item.path === 'chatroom' ? !hasClass : false
+    }));
+  }
+
   // STUDENT RESULTS - BACKWARD COMPATIBLE
   getStudentResults(studentId: string): any[] {
     if (this.resultsCache[studentId]) {
@@ -184,26 +209,24 @@ export class UserService {
     );
   }
 
-  addStudentResult(result: any): void {
-    this.http.post('http://localhost:5000/api/results', result).subscribe({
-      next: () => {
+  addStudentResult(result: any): Observable<any> {
+    return this.http.post('http://localhost:5000/api/results', result).pipe(
+      tap(() => {
         if (result.studentId) {
           delete this.resultsCache[result.studentId];
         }
-      },
-      error: (error) => console.error('Error adding result:', error)
-    });
+      })
+    );
   }
 
-  updateStudentResult(resultId: string, updatedResult: any): void {
-    this.http.put(`http://localhost:5000/api/results/${resultId}`, updatedResult).subscribe({
-      next: () => {
+  updateStudentResult(resultId: string, updatedResult: any): Observable<any> {
+    return this.http.put(`http://localhost:5000/api/results/${resultId}`, updatedResult).pipe(
+      tap(() => {
         if (updatedResult.studentId) {
           delete this.resultsCache[updatedResult.studentId];
         }
-      },
-      error: (error) => console.error('Error updating result:', error)
-    });
+      })
+    );
   }
 
   reassignStudent(studentId: string, oldClassId: string, newClassId: string): void {

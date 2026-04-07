@@ -1,15 +1,52 @@
 import { Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import Class from '../models/class.model';
+import User from '../models/user.model';
+
+const syncStudentClassAssignments = async (classId: string, studentIds: string[]) => {
+  const uniqueStudentIds = [...new Set((studentIds || []).filter(Boolean))];
+
+  if (uniqueStudentIds.length > 0) {
+    await Class.updateMany(
+      { _id: { $ne: classId }, studentIds: { $in: uniqueStudentIds } },
+      { $pull: { studentIds: { $in: uniqueStudentIds } } }
+    );
+
+    await User.updateMany(
+      { role: 'S', _id: { $in: uniqueStudentIds } },
+      { $set: { 'details.classId': classId } }
+    );
+  }
+
+  await User.updateMany(
+    { role: 'S', _id: { $nin: uniqueStudentIds }, 'details.classId': classId },
+    { $unset: { 'details.classId': 1 } }
+  );
+};
 
 // 🔹 Create Class
 export const createClass = async (req: Request, res: Response) => {
   try {
-    const newClass = new Class(req.body);
+    const classData = { ...req.body };
+    // classId is the custom user-defined string (e.g. "CS-2024-A")
+    if (!classData.classId) {
+      return res.status(400).json({ message: 'classId is required' });
+    }
+    // _id: use provided id/classId, or auto-generate
+    if (!classData._id) {
+      classData._id = classData.id || uuidv4();
+    }
+    // Remove frontend-only alias
+    delete classData.id;
+
+    const newClass = new Class(classData);
     await newClass.save();
+    await syncStudentClassAssignments(String(newClass._id), newClass.studentIds || []);
 
     res.status(201).json(newClass);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating class' });
+    console.error('Error creating class:', error);
+    res.status(500).json({ message: 'Error creating class', error: String(error) });
   }
 };
 
@@ -41,22 +78,44 @@ export const getClassById = async (req: Request, res: Response) => {
 // 🔹 Update Class
 export const updateClass = async (req: Request, res: Response) => {
   try {
+    const updateData = { ...req.body };
+    // Remove _id and frontend id alias from the update payload to avoid immutable field errors
+    // classId is kept so it can be updated if needed
+    delete updateData._id;
+    delete updateData.id;
+
     const updatedClass = await Class.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true }
     );
 
+    if (!updatedClass) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    await syncStudentClassAssignments(String(updatedClass._id), updatedClass.studentIds || []);
+
     res.json(updatedClass);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating class' });
+    console.error('Error updating class:', error);
+    res.status(500).json({ message: 'Error updating class', error: String(error) });
   }
 };
 
 // 🔹 Delete Class
 export const deleteClass = async (req: Request, res: Response) => {
   try {
-    await Class.findByIdAndDelete(req.params.id);
+    const deletedClass = await Class.findByIdAndDelete(req.params.id);
+
+    if (!deletedClass) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    await User.updateMany(
+      { role: 'S', 'details.classId': req.params.id },
+      { $unset: { 'details.classId': 1 } }
+    );
 
     res.json({ message: 'Class deleted successfully' });
   } catch (error) {

@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 
 export interface ClassData {
+  classId?: string;
   id?: string;
   _id?: string;
+  customClassId?: string;
   name: string;
   departmentId: string;
   teacherIds: string[];
@@ -26,75 +27,97 @@ export class ClassService {
     this.loadClasses();
   }
 
-  private loadClasses(): void {
-    this.http.get<ClassData[]>(this.apiUrl).subscribe(
-      classes => this.classesSubject.next(classes),
-      error => console.error('Error loading classes:', error)
-    );
+  private normalizeClass(classData: ClassData): ClassData {
+    const normalizedId = (classData._id || classData.id || classData.classId || '').trim();
+
+    return {
+      ...classData,
+      classId: normalizedId,
+      id: normalizedId,
+      _id: normalizedId,
+      customClassId: classData.customClassId || '',
+      teacherIds: classData.teacherIds || [],
+      studentIds: classData.studentIds || [],
+      subjects: classData.subjects || [],
+      timeTable: classData.timeTable || []
+    };
   }
 
-  // BACKWARD COMPATIBLE SYNCHRONOUS METHODS
+  private loadClasses(): void {
+    this.http.get<ClassData[]>(this.apiUrl).subscribe({
+      next: (classes) => this.classesSubject.next(classes.map(classData => this.normalizeClass(classData))),
+      error: (error) => console.error('Error loading classes:', error)
+    });
+  }
+
   getClasses(): ClassData[] {
     return this.classesSubject.getValue();
   }
-  
-  getClassById(id: string): ClassData | undefined {
-    return this.classesSubject.getValue().find(c => (c.id || c._id) === id);
-  }
 
-  // OBSERVABLE METHODS FOR REACTIVE COMPONENTS
   getClassesObservable(): Observable<ClassData[]> {
     return this.classes$;
   }
 
-  getStudentsByClass(classId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${classId}/students`);
+  getClassById(classId: string): ClassData | undefined {
+    return this.getClasses().find(c => (c.classId || c.id || c._id) === classId);
   }
-  
+
+  addClass(classData: ClassData): Observable<ClassData> {
+    const normalizedClass = this.normalizeClass(classData);
+    return this.http.post<ClassData>(this.apiUrl, normalizedClass).pipe(
+      tap((newClass) => {
+        const current = this.getClasses();
+        this.classesSubject.next([...current, this.normalizeClass(newClass)]);
+      })
+    );
+  }
+
+  updateClass(classData: ClassData): Observable<ClassData> {
+    const normalizedClass = this.normalizeClass(classData);
+    const classId = normalizedClass.classId || normalizedClass._id || normalizedClass.id;
+    return this.http.put<ClassData>(
+      `${this.apiUrl}/${classId}`,
+      normalizedClass
+    ).pipe(
+      tap((updated) => {
+        const normalizedUpdated = this.normalizeClass(updated);
+        const updatedList = this.getClasses().map(c =>
+          (c.classId || c.id || c._id) === normalizedUpdated.classId ? normalizedUpdated : c
+        );
+        this.classesSubject.next(updatedList);
+      })
+    );
+  }
+
+  deleteClass(classId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${classId}`).pipe(
+      tap(() => {
+        this.classesSubject.next(
+          this.getClasses().filter(c => (c.classId || c.id || c._id) !== classId)
+        );
+      })
+    );
+  }
+
+  refresh() {
+    this.loadClasses();
+  }
+
   getSubjectsForClass(classId: string): any[] {
     const classData = this.getClassById(classId);
     return classData?.subjects || [];
   }
 
-  addClass(classData: ClassData): void {
-    this.http.post<ClassData>(this.apiUrl, classData).subscribe({
-      next: (newClass) => {
-        const currentClasses = this.classesSubject.getValue();
-        this.classesSubject.next([...currentClasses, newClass]);
-      },
-      error: (error) => console.error('Error adding class:', error)
-    });
-  }
-
-  updateClass(classData: ClassData): void {
-    const classId = classData.id || classData._id;
-    this.http.put<ClassData>(`${this.apiUrl}/${classId}`, classData).subscribe({
-      next: (updatedClass) => {
-        const currentClasses = this.classesSubject.getValue();
-        const index = currentClasses.findIndex(c => (c.id || c._id) === classId);
-        if (index !== -1) {
-          currentClasses[index] = updatedClass;
-          this.classesSubject.next([...currentClasses]);
-        }
-      },
-      error: (error) => console.error('Error updating class:', error)
-    });
-  }
-
-  deleteClass(classId: string): void {
-    this.http.delete<void>(`${this.apiUrl}/${classId}`).subscribe({
-      next: () => {
-        const currentClasses = this.classesSubject.getValue();
-        this.classesSubject.next(currentClasses.filter(c => (c.id || c._id) !== classId));
-      },
-      error: (error) => console.error('Error deleting class:', error)
-    });
+  getStudentsByClass(classId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${classId}/students`);
   }
 
   removeStudentFromAllClasses(studentId: string): void {
     const classes = this.getClasses();
+
     classes.forEach(c => {
       const index = c.studentIds.indexOf(studentId);
+
       if (index > -1) {
         c.studentIds.splice(index, 1);
         this.updateClass(c);

@@ -118,7 +118,7 @@ export class EditStudentNewComponent implements OnInit, OnDestroy {
       
       // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        alert('Image too large! Maximum size is 10MB');
+     
         return;
       }
       
@@ -154,13 +154,12 @@ export class EditStudentNewComponent implements OnInit, OnDestroy {
         }
         
         this.userService.updateUser(this.student);
-        alert('Student updated successfully!');
+       
       } else {
         this.userService.addUser(this.student);
         
         // Wait a bit then navigate
         setTimeout(() => {
-          alert('Student added successfully with ID: ' + this.student!.id);
           this.router.navigate(['/admin/manage-students']);
         }, 300);
         return;

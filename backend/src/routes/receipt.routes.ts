@@ -18,11 +18,11 @@ router.post('/', verifyToken, authorizeRoles('A'), createReceipt);
 // 🔹 Get all receipts (Admin)
 router.get('/', verifyToken, authorizeRoles('A'), getReceipts);
 
+// 🔹 Get receipts by student (must be before /:id)
+router.get('/student/:studentId', verifyToken, getReceiptsByStudent);
+
 // 🔹 Get receipt by ID
 router.get('/:id', verifyToken, getReceiptById);
-
-// 🔹 Get receipts by student
-router.get('/student/:studentId', verifyToken, getReceiptsByStudent);
 
 // 🔹 Update receipt (Admin only)
 router.put('/:id', verifyToken, authorizeRoles('A'), updateReceipt);

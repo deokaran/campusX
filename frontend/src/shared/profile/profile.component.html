@@ -1,169 +1,275 @@
-
 @if(user) {
 <div class="card shadow-sm">
   <div class="card-body p-4 p-lg-5">
+
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
       <h2 class="card-title h3 mb-0">My Profile</h2>
+
       @if(!isEditMode) {
-        <button (click)="setEditMode(true)" class="btn btn-primary btn-sm d-flex align-items-center">
-          <i class="fas fa-pencil-alt me-2"></i>Edit Profile
-        </button>
+      <button (click)="setEditMode(true)" class="btn btn-primary btn-sm d-flex align-items-center">
+        <i class="fas fa-pencil-alt me-2"></i>Edit Profile
+      </button>
       }
     </div>
 
     @if(!isEditMode) {
-    <!-- View Mode -->
+    <!-- VIEW MODE -->
     <div class="row g-5">
+
+      <!-- LEFT SIDE -->
       <div class="col-lg-4 text-center">
-        <img [src]="user.details?.avatarUrl" alt="Profile Picture" class="profile-picture rounded-circle border border-4 border-light shadow-sm mb-3">
-        <h3 class="h5 fw-bold text-dark">{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}</h3>
-        <p class="text-muted">{{ user.email }}</p>
+        <img [src]="user.details?.avatarUrl || 'https://via.placeholder.com/150'" alt="Profile Picture"
+          class="profile-picture rounded-circle border border-4 border-light shadow-sm mb-3">
+
+        <h3 class="h5 fw-bold text-dark">
+          {{ user.firstName || 'N/A' }} {{ user.middleName || '' }} {{ user.lastName || '' }}
+        </h3>
+
+        <p class="text-muted">{{ user.email || 'N/A' }}</p>
+
         <div class="mt-4">
-           <h4 class="h6 fw-semibold text-dark mb-2">Signature</h4>
-           <div class="p-2 border rounded-3 bg-light d-flex justify-content-center">
-               <img [src]="signatureImg" alt="Signature" class="signature-img">
-           </div>
+          <h4 class="h6 fw-semibold text-dark mb-2">Signature</h4>
+          <div class="p-2 border rounded-3 bg-light d-flex justify-content-center">
+            <img [src]="signatureImg" alt="Signature" class="signature-img">
+          </div>
         </div>
       </div>
+
+      <!-- RIGHT SIDE -->
       <div class="col-lg-8">
-        <!-- Common Details -->
+
+        <!-- PERSONAL -->
         <h3 class="h5 fw-bold text-dark border-bottom pb-2 mb-3">Personal Details</h3>
+
         <div class="row row-cols-1 row-cols-sm-2 g-3">
-          <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Name:</strong><span class="ms-2 text-dark">{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}</span></div></div>
-          <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">User ID:</strong><span class="ms-2 text-dark">{{ user.id }}</span></div></div>
-          <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Email:</strong><span class="ms-2 text-dark">{{ user.email }}</span></div></div>
-          <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Mobile:</strong><span class="ms-2 text-dark">{{ user.details?.mobile }}</span></div></div>
-          <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Date of Birth:</strong><span class="ms-2 text-dark">{{ user.details?.dob | date:'longDate' }}</span></div></div>
+
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">Name:</strong>
+              <span class="ms-2 text-dark">
+                {{ user.firstName || 'N/A' }} {{ user.middleName || '' }} {{ user.lastName || '' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">User ID:</strong>
+              <span class="ms-2 text-dark">
+                {{ user.id || user._id || 'N/A' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">Email:</strong>
+              <span class="ms-2 text-dark">{{ user.email || 'N/A' }}</span>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">Mobile:</strong>
+              <span class="ms-2 text-dark">{{ user.details?.mobile || 'N/A' }}</span>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">Date of Birth:</strong>
+              <span class="ms-2 text-dark">
+                {{ user.details?.dob ? (user.details.dob | date:'longDate') : 'N/A' }}
+              </span>
+            </div>
+          </div>
+
           @if(user.role === 'S') {
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Guardian's No:</strong><span class="ms-2 text-dark">{{ user.details?.guardianNo }}</span></div></div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong class="text-muted">Guardian's No:</strong>
+              <span class="ms-2 text-dark">{{ user.details?.guardianNo || 'N/A' }}</span>
+            </div>
+          </div>
           }
+
         </div>
 
-        <!-- Role-specific Details -->
+        <!-- STUDENT -->
         @if(user.role === 'S') {
-          <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Academic Details</h3>
-          <div class="row row-cols-1 row-cols-sm-2 g-3">
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">PRN:</strong><span class="ms-2 text-dark">{{ user.details?.prn }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Roll No:</strong><span class="ms-2 text-dark">{{ user.details?.rollNo }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Department:</strong><span class="ms-2 text-dark">{{ user.details?.department }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Degree:</strong><span class="ms-2 text-dark">{{ user.details?.degree }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Year/Sem:</strong><span class="ms-2 text-dark">{{ user.details?.yearSem }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Batch:</strong><span class="ms-2 text-dark">{{ user.details?.batch }}</span></div></div>
+        <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Academic Details</h3>
+
+        <div class="row row-cols-1 row-cols-sm-2 g-3">
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>PRN:</strong><span class="ms-2">{{ user.details?.prn || 'N/A'
+                }}</span></div>
           </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Roll No:</strong><span class="ms-2">{{ user.details?.rollNo ||
+                'N/A' }}</span></div>
+          </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Department:</strong><span class="ms-2">{{
+                user.details?.department || 'N/A' }}</span></div>
+          </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Degree:</strong><span class="ms-2">{{ user.details?.degree ||
+                'N/A' }}</span></div>
+          </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Year/Sem:</strong><span class="ms-2">{{ user.details?.yearSem ||
+                'N/A' }}</span></div>
+          </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Batch:</strong><span class="ms-2">{{ user.details?.batch ||
+                'N/A' }}</span></div>
+          </div>
+        </div>
         }
+
+        <!-- TEACHER -->
         @if(user.role === 'T') {
-          <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Professional Details</h3>
-           <div class="row row-cols-1 row-cols-sm-2 g-3">
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Department:</strong><span class="ms-2 text-dark">{{ user.details?.department }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Specialization:</strong><span class="ms-2 text-dark">{{ user.details?.specialization }}</span></div></div>
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Joining Date:</strong><span class="ms-2 text-dark">{{ user.details?.joiningDate | date:'longDate' }}</span></div></div>
+        <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Professional Details</h3>
+
+        <div class="row row-cols-1 row-cols-sm-2 g-3">
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Department:</strong><span class="ms-2">{{
+                user.details?.department || 'N/A' }}</span></div>
           </div>
-        }
-         @if(user.role === 'A') {
-          <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Administrative Details</h3>
-           <div class="row row-cols-1 row-cols-sm-2 g-3">
-            <div class="col"><div class="p-3 bg-light rounded-3"><strong class="text-muted">Role:</strong><span class="ms-2 text-dark">{{ user.details?.role }}</span></div></div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Specialization:</strong><span class="ms-2">{{
+                user.details?.specialization || 'N/A' }}</span></div>
           </div>
+          <div class="col">
+            <div class="p-3 bg-light rounded-3"><strong>Joining Date:</strong>
+              <span class="ms-2">
+                {{ user.details?.joiningDate ? (user.details.joiningDate | date:'longDate') : 'N/A' }}
+              </span>
+            </div>
+          </div>
+        </div>
         }
+
+        <!-- ADMIN -->
+        @if(user.role === 'A') {
+        <h3 class="h5 fw-bold text-dark border-bottom pb-2 mt-4 mb-3">Administrative Details</h3>
+
+        <div class="row">
+          <div class="col">
+            <div class="p-3 bg-light rounded-3">
+              <strong>Role:</strong>
+              <span class="ms-2">{{ user.role || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+        }
+
       </div>
     </div>
+
+
     } @else if(editableUser) {
     <!-- Edit Mode -->
     <div class="row g-5">
-        <div class="col-lg-4 text-center">
-            <div class="position-relative d-inline-block profile-picture-group">
-                <img [src]="profilePic" alt="Profile Picture" class="profile-picture rounded-circle border border-4 border-light shadow-sm">
-                <label for="profilePicInput" class="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center bg-primary text-white rounded-circle edit-icon">
-                    <i class="fas fa-camera"></i>
-                </label>
-                <input id="profilePicInput" type="file" class="d-none" (change)="onProfilePicChange($event)" accept="image/*">
-            </div>
-            <div class="mt-4">
-                <h4 class="h6 fw-semibold text-dark mb-2">Signature</h4>
-                <div class="position-relative d-inline-block p-2 border rounded-3 bg-light">
-                    <img [src]="signatureImg" alt="Signature" class="signature-img">
-                    <label for="sigInput" class="position-absolute top-50 start-50 translate-middle d-flex align-items-center justify-content-center bg-dark bg-opacity-50 text-white w-100 h-100 rounded-3 cursor-pointer upload-overlay">
-                        <i class="fas fa-upload me-1"></i> Upload
-                    </label>
-                    <input id="sigInput" type="file" class="d-none" (change)="onSignatureChange($event)" accept="image/*">
-                </div>
-            </div>
+      <div class="col-lg-4 text-center">
+        <div class="position-relative d-inline-block profile-picture-group">
+          <img [src]="profilePic" alt="Profile Picture"
+            class="profile-picture rounded-circle border border-4 border-light shadow-sm">
+          <label for="profilePicInput"
+            class="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center bg-primary text-white rounded-circle edit-icon">
+            <i class="fas fa-camera"></i>
+          </label>
+          <input id="profilePicInput" type="file" class="d-none" (change)="onProfilePicChange($event)" accept="image/*">
         </div>
-        <div class="col-lg-8">
-            <div class="row g-3">
-              <div class="col-md-4">
-                  <label class="form-label">First Name</label>
-                  @if(canEditAllDetails) {
-                    <input type="text" [(ngModel)]="editableUser.firstName" class="form-control">
-                  } @else {
-                    <input type="text" [value]="editableUser.firstName" class="form-control" disabled readonly>
-                  }
-              </div>
-              <div class="col-md-4">
-                  <label class="form-label">Middle Name</label>
-                  @if(canEditAllDetails) {
-                    <input type="text" [(ngModel)]="editableUser.middleName" class="form-control">
-                  } @else {
-                    <input type="text" [value]="editableUser.middleName" class="form-control" disabled readonly>
-                  }
-              </div>
-              <div class="col-md-4">
-                  <label class="form-label">Last Name</label>
-                  @if(canEditAllDetails) {
-                    <input type="text" [(ngModel)]="editableUser.lastName" class="form-control">
-                  } @else {
-                    <input type="text" [value]="editableUser.lastName" class="form-control" disabled readonly>
-                  }
-              </div>
-              <div class="col-md-6">
-                  <label class="form-label">Email Address</label>
-                  <input type="email" [(ngModel)]="editableUser.email" class="form-control">
-              </div>
-              <div class="col-md-6">
-                  <label class="form-label">Mobile Number</label>
-                  <input type="text" [(ngModel)]="editableUser.details.mobile" class="form-control">
-              </div>
-               <div class="col-md-6">
-                  <label class="form-label">Date of Birth</label>
-                  @if(canEditAllDetails) {
-                    <input type="date" [(ngModel)]="editableUser.details.dob" class="form-control">
-                  } @else {
-                    <input type="text" [value]="editableUser.details.dob | date:'longDate'" class="form-control" disabled readonly>
-                  }
-              </div>
+        <div class="mt-4">
+          <h4 class="h6 fw-semibold text-dark mb-2">Signature</h4>
+          <div class="position-relative d-inline-block p-2 border rounded-3 bg-light">
+            <img [src]="signatureImg" alt="Signature" class="signature-img">
+            <label for="sigInput"
+              class="position-absolute top-50 start-50 translate-middle d-flex align-items-center justify-content-center bg-dark bg-opacity-50 text-white w-100 h-100 rounded-3 cursor-pointer upload-overlay">
+              <i class="fas fa-upload me-1"></i> Upload
+            </label>
+            <input id="sigInput" type="file" class="d-none" (change)="onSignatureChange($event)" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">First Name</label>
+            @if(canEditAllDetails) {
+            <input type="text" [(ngModel)]="editableUser.firstName" class="form-control">
+            } @else {
+            <input type="text" [value]="editableUser.firstName" class="form-control" disabled readonly>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Middle Name</label>
+            @if(canEditAllDetails) {
+            <input type="text" [(ngModel)]="editableUser.middleName" class="form-control">
+            } @else {
+            <input type="text" [value]="editableUser.middleName" class="form-control" disabled readonly>
+            }
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Last Name</label>
+            @if(canEditAllDetails) {
+            <input type="text" [(ngModel)]="editableUser.lastName" class="form-control">
+            } @else {
+            <input type="text" [value]="editableUser.lastName" class="form-control" disabled readonly>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email Address</label>
+            <input type="email" [(ngModel)]="editableUser.email" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Mobile Number</label>
+            <input type="text" [(ngModel)]="editableUser.details.mobile" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Date of Birth</label>
+            @if(canEditAllDetails) {
+            <input type="date" [(ngModel)]="editableUser.details.dob" class="form-control">
+            } @else {
+            <input type="text" [value]="editableUser.details.dob | date:'longDate'" class="form-control" disabled
+              readonly>
+            }
+          </div>
 
-              @if(user.role === 'S') {
-                <div class="col-md-6">
-                    <label class="form-label">PRN</label>
-                    <input type="text" [value]="editableUser.details.prn" class="form-control" disabled readonly>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Guardian's Number</label>
-                    <input type="text" [(ngModel)]="editableUser.details.guardianNo" class="form-control">
-                </div>
-              }
-              @if(user.role === 'T') {
-                 <div class="col-md-6">
-                    <label class="form-label">Specialization</label>
-                     @if(canEditAllDetails) {
-                      <input type="text" [(ngModel)]="editableUser.details.specialization" class="form-control">
-                    } @else {
-                      <input type="text" [value]="editableUser.details.specialization" class="form-control" disabled readonly>
-                    }
-                </div>
-              }
-            </div>
-            <div class="d-flex justify-content-end gap-3 pt-4 mt-4 border-top">
-                <button (click)="setEditMode(false)" class="btn btn-secondary">Cancel</button>
-                <button (click)="saveProfile()" class="btn btn-success d-flex align-items-center">
-                    <i class="fas fa-save me-2"></i>Save Changes
-                </button>
-            </div>
+          @if(user.role === 'S') {
+          <div class="col-md-6">
+            <label class="form-label">PRN</label>
+            <input type="text" [value]="editableUser.details.prn" class="form-control" disabled readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Guardian's Number</label>
+            <input type="text" [(ngModel)]="editableUser.details.guardianNo" class="form-control">
+          </div>
+          }
+          @if(user.role === 'T') {
+          <div class="col-md-6">
+            <label class="form-label">Specialization</label>
+            @if(canEditAllDetails) {
+            <input type="text" [(ngModel)]="editableUser.details.specialization" class="form-control">
+            } @else {
+            <input type="text" [value]="editableUser.details.specialization" class="form-control" disabled readonly>
+            }
+          </div>
+          }
         </div>
+        <div class="d-flex justify-content-end gap-3 pt-4 mt-4 border-top">
+          <button (click)="setEditMode(false)" class="btn btn-secondary">Cancel</button>
+          <button (click)="saveProfile()" class="btn btn-success d-flex align-items-center">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </button>
+        </div>
+      </div>
     </div>
     }
   </div>
 </div>
 } @else {
-  <p class="text-center text-muted">Loading profile...</p>
+<p class="text-center text-muted">Loading profile...</p>
 }

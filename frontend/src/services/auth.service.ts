@@ -28,14 +28,13 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  // SIMPLIFIED LOGIN (No JWT)
   login(id: string, password: string): Observable<boolean> {
     console.log('Login request:', { id, password: password ? '***' : 'missing' });
-    
+
     return this.http.post<{ user: User; message: string }>(`${this.apiUrl}/login`, { id, password }).pipe(
       map(response => {
         console.log('Login response:', response);
-        
+
         if (response.user) {
           this.updateCurrentUser(response.user);
           this.navigateToDashboard(response.user.role);
@@ -52,7 +51,7 @@ export class AuthService {
 
   updateCurrentUser(user: User) {
     const userToStore = { ...user };
-    delete userToStore.password; // Do not store password
+    delete userToStore.password;
     this.currentUserSubject.next(userToStore);
     localStorage.setItem('currentUser', JSON.stringify(userToStore));
   }
@@ -70,7 +69,7 @@ export class AuthService {
   getUserRole(): UserRole | null {
     return this.currentUserValue?.role || null;
   }
-  
+
   private navigateToDashboard(role: UserRole) {
     switch (role) {
       case 'S':
@@ -88,11 +87,15 @@ export class AuthService {
     }
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  forgotPassword(userId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { userId });
   }
 
-  resetPassword(email: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reset-password`, { email, password: newPassword });
+  resendOtp(userId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/resend-otp`, { userId });
+  }
+
+  resetPassword(userId: string, otp: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, { userId, otp, newPassword });
   }
 }

@@ -13,7 +13,8 @@
           <div class="col">
             <div class="card h-100">
               <div class="card-body">
-                <h3 class="card-title h5 text-primary">{{c.name}} ({{c.id}})</h3>
+                <h3 class="card-title h5 text-primary">{{c.name}}</h3>
+                <p class="card-text small text-muted mt-1"><span class="fw-semibold">ID:</span> {{c.customClassId || c.id}}</p>
                 <p class="card-text small text-muted mt-2">Teachers: {{c.teacherIds.length}}</p>
                 <p class="card-text small text-muted">Students: {{c.studentIds.length}}</p>
               </div>

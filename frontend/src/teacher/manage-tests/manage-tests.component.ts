@@ -46,19 +46,19 @@ export class ManageTestsComponent implements OnInit, OnDestroy {
   }
 
   publishTest(test: Test) {
-    this.testService.publishTest(test.id);
+    this.testService.publishTest(test._id || test.id);
   }
   
   closeTest(test: Test) {
-    this.testService.closeTest(test.id);
+    this.testService.closeTest(test._id || test.id);
   }
 
   revealResults(test: Test) {
-    this.testService.publishResults(test.id);
+    this.testService.publishResults(test._id || test.id);
   }
 
   resumeTest(test: Test) {
-    this.testService.resumeTest(test.id);
+    this.testService.resumeTest(test._id || test.id);
   }
 
   selectTestForDeletion(test: Test): void {
@@ -67,7 +67,7 @@ export class ManageTestsComponent implements OnInit, OnDestroy {
 
   confirmDelete(): void {
     if (this.testToDelete) {
-      this.testService.deleteTest(this.testToDelete.id);
+      this.testService.deleteTest(this.testToDelete._id || this.testToDelete.id);
       this.testToDelete = null;
     }
   }

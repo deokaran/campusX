@@ -8,6 +8,7 @@
           <a [routerLink]="[c.id]" class="card h-100 class-card shadow-sm text-decoration-none">
             <div class="card-body">
               <h3 class="card-title h5 text-warning-emphasis">{{c.name}}</h3>
+              <p class="card-text small text-muted mb-1">Class Code: {{c.id || c._id}}</p>
               <p class="card-text small text-dark mt-2">Students: {{c.studentIds.length}}</p>
             </div>
             <div class="card-footer d-flex justify-content-end align-items-center">

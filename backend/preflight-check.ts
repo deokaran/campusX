@@ -65,7 +65,7 @@ if (fs.existsSync(seedDataPath)) {
     }
   } catch (error) {
     console.log('   ❌ Invalid JSON in seed-data.json!');
-    console.log(`      Error: ${error.message}`);
+    console.log(`      Error: ${error instanceof Error ? error.message : String(error)}`);
     allChecks = false;
   }
 } else {
@@ -150,7 +150,7 @@ if (process.env.MONGO_URI) {
       process.exit(allChecks ? 0 : 1);
     } catch (error) {
       console.log('   ❌ MongoDB connection failed!');
-      console.log(`      Error: ${error.message}`);
+      console.log(`      Error: ${error instanceof Error ? error.message : String(error)}`);
       console.log('\n   Troubleshooting:');
       console.log('   - Is MongoDB installed and running?');
       console.log('   - Check MongoDB service: sudo systemctl status mongod (Linux)');

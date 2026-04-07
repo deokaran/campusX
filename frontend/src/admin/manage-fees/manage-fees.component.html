@@ -1,11 +1,11 @@
-
 <div class="card shadow-sm">
   <div class="card-body p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="card-title h3 mb-0">Manage Student Fees</h2>
       <div class="d-flex gap-2">
         <div class="dropdown">
-          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
             <i class="fas fa-download me-2"></i>Download Sample
           </button>
           <ul class="dropdown-menu">
@@ -23,22 +23,17 @@
       <!-- Student List -->
       <div class="col-lg-4 d-flex flex-column">
         <h3 class="h5 text-dark mb-2">Select a Student</h3>
-        <input 
-          type="text" 
-          placeholder="Search by name or ID..."
-          [(ngModel)]="searchTerm"
-          (input)="filterStudents()"
+        <input type="text" placeholder="Search by name or ID..." [(ngModel)]="searchTerm" (input)="filterStudents()"
           class="form-control mb-3">
         <div class="list-group flex-grow-1" style="max-height: calc(100vh - 20rem); overflow-y: auto;">
           @for(student of filteredStudents; track student.id) {
-            <button type="button" (click)="selectStudent(student)"
-                class="list-group-item list-group-item-action"
-                [class.active]="selectedStudent?.id === student.id">
-              <p class="fw-semibold mb-0">{{student.firstName}} {{student.lastName}}</p>
-              <p class="small text-muted mb-0">{{student.id}}</p>
-            </button>
+          <button type="button" (click)="selectStudent(student)" class="list-group-item list-group-item-action"
+            [class.active]="selectedStudent?.id === student.id">
+            <p class="fw-semibold mb-0">{{student.firstName}} {{student.lastName}}</p>
+            <p class="small text-muted mb-0">{{student.id}}</p>
+          </button>
           } @empty {
-            <div class="list-group-item text-center text-muted">No students found.</div>
+          <div class="list-group-item text-center text-muted">No students found.</div>
           }
         </div>
       </div>
@@ -46,59 +41,63 @@
       <!-- Student Details -->
       <div class="col-lg-8">
         @if (selectedStudent) {
-          <div class="vstack gap-4">
-            <div class="d-flex justify-content-between align-items-center">
-              <h3 class="h5 text-dark mb-0">Fee Details for {{selectedStudent.firstName}} {{selectedStudent.lastName}}</h3>
-              <button (click)="clearSelection()" class="btn-close" aria-label="Clear Selection"></button>
-            </div>
+        <div class="vstack gap-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 class="h5 text-dark mb-0">Fee Details for {{selectedStudent.firstName}} {{selectedStudent.lastName}}
+            </h3>
+            <button (click)="clearSelection()" class="btn-close" aria-label="Clear Selection"></button>
+          </div>
 
-            <!-- Fee Summary -->
-            <div class="row row-cols-1 row-cols-md-3 g-3 text-center">
-              <div class="col">
-                <div class="p-3 bg-info-subtle border border-info-subtle rounded-3">
-                  <p class="small fw-medium text-info-emphasis">Total Fees</p>
-                  <p class="h4 fw-bold text-info-emphasis">₹{{ selectedStudent.details.fees.total.toLocaleString() }}</p>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-3 bg-success-subtle border border-success-subtle rounded-3">
-                  <p class="small fw-medium text-success-emphasis">Paid</p>
-                  <p class="h4 fw-bold text-success-emphasis">₹{{ selectedStudent.details.fees.paid.toLocaleString() }}</p>
-                </div>
-              </div>
-              <div class="col">
-                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3">
-                  <p class="small fw-medium text-danger-emphasis">Dues</p>
-                  <p class="h4 fw-bold text-danger-emphasis">₹{{ selectedStudent.details.fees.due.toLocaleString() }}</p>
-                </div>
+          <!-- Fee Summary -->
+          <div class="row row-cols-1 row-cols-md-3 g-3 text-center">
+            <div class="col">
+              <div class="p-3 bg-info-subtle border border-info-subtle rounded-3">
+                <p class="small fw-medium text-info-emphasis">Total Fees</p>
+                <p class="h4 fw-bold text-info-emphasis">₹{{ selectedStudent.details.fees.total.toLocaleString() }}</p>
               </div>
             </div>
-
-            <!-- Receipts -->
-            <div>
-               <div class="d-flex justify-content-between align-items-center mb-2">
-                <h4 class="h6 text-dark">Payment History</h4>
-                <button (click)="openAddReceiptModal()" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#receiptModal"><i class="fas fa-plus me-1"></i> Add Receipt</button>
+            <div class="col">
+              <div class="p-3 bg-success-subtle border border-success-subtle rounded-3">
+                <p class="small fw-medium text-success-emphasis">Paid</p>
+                <p class="h4 fw-bold text-success-emphasis">₹{{ selectedStudent.details.fees.paid.toLocaleString() }}
+                </p>
               </div>
-              <ul class="list-group">
-                @for (receipt of studentReceipts; track receipt.receiptNumber) {
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <p class="fw-medium text-dark mb-0">Receipt: {{receipt.receiptNumber}}</p>
-                      <p class="small text-muted mb-0">{{receipt.date | date:'longDate'}}</p>
-                    </div>
-                    <p class="fw-semibold text-dark mb-0">₹{{receipt.total.toLocaleString()}}</p>
-                  </li>
-                } @empty {
-                  <li class="list-group-item text-center text-muted p-4">No receipts found for this student.</li>
-                }
-              </ul>
+            </div>
+            <div class="col">
+              <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3">
+                <p class="small fw-medium text-danger-emphasis">Dues</p>
+                <p class="h4 fw-bold text-danger-emphasis">
+                  ₹{{ selectedStudent.details.fees.total - selectedStudent.details.fees.paid }}
+                </p>
+              </div>
             </div>
           </div>
+          <!-- Receipts -->
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h4 class="h6 text-dark">Payment History</h4>
+              <button (click)="openAddReceiptModal()" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                data-bs-target="#receiptModal"><i class="fas fa-plus me-1"></i> Add Receipt</button>
+            </div>
+            <ul class="list-group">
+              @for (receipt of studentReceipts; track receipt.receiptNumber) {
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="fw-medium text-dark mb-0">Receipt: {{receipt.receiptNumber}}</p>
+                  <p class="small text-muted mb-0">{{receipt.date | date:'longDate'}}</p>
+                </div>
+                <p class="fw-semibold text-dark mb-0">₹{{receipt.total.toLocaleString()}}</p>
+              </li>
+              } @empty {
+              <li class="list-group-item text-center text-muted p-4">No receipts found for this student.</li>
+              }
+            </ul>
+          </div>
+        </div>
         } @else {
-          <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded-3">
-            <p class="text-muted">Please select a student to view their fee details.</p>
-          </div>
+        <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded-3">
+          <p class="text-muted">Please select a student to view their fee details.</p>
+        </div>
         }
       </div>
     </div>
@@ -110,45 +109,62 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       @if (newReceipt) {
-        <form #receiptForm="ngForm" (ngSubmit)="saveReceipt()">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="receiptModalLabel">Add New Receipt for {{selectedStudent?.firstName}} {{selectedStudent?.lastName}}</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="closeModal()"></button>
+      <form #receiptForm="ngForm" (ngSubmit)="saveReceipt()">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="receiptModalLabel">Add New Receipt for {{selectedStudent?.firstName}}
+            {{selectedStudent?.lastName}}</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3 small">
+            <div class="col-md-6"><label class="form-label">Invoice Number</label><input type="text"
+                [(ngModel)]="newReceipt.invoiceNumber" name="invoice" required class="form-control form-control-sm">
+            </div>
+            <div class="col-md-6"><label class="form-label">Receipt Number</label><input type="text"
+                [(ngModel)]="newReceipt.receiptNumber" name="receiptNo" required class="form-control form-control-sm">
+            </div>
+            <div class="col-md-6"><label class="form-label">Academic Year</label><input type="text"
+                [(ngModel)]="newReceipt.academicYear" name="year" required class="form-control form-control-sm"></div>
+            <div class="col-md-6"><label class="form-label">Date</label><input type="date" [(ngModel)]="newReceipt.date"
+                name="date" [max]="today" required class="form-control form-control-sm"></div>
+            <div class="col-12"><label class="form-label">Payment Mode</label><select
+                [(ngModel)]="newReceipt.paymentMode" name="paymentMode" required class="form-select form-select-sm">
+                <option>Offline</option>
+                <option>Online</option>
+                <option>Cheque</option>
+              </select></div>
           </div>
-          <div class="modal-body">
-              <div class="row g-3 small">
-                <div class="col-md-6"><label class="form-label">Invoice Number</label><input type="text" [(ngModel)]="newReceipt.invoiceNumber" name="invoice" required class="form-control form-control-sm"></div>
-                <div class="col-md-6"><label class="form-label">Receipt Number</label><input type="text" [(ngModel)]="newReceipt.receiptNumber" name="receiptNo" required class="form-control form-control-sm"></div>
-                <div class="col-md-6"><label class="form-label">Academic Year</label><input type="text" [(ngModel)]="newReceipt.academicYear" name="year" required class="form-control form-control-sm"></div>
-                <div class="col-md-6"><label class="form-label">Date</label><input type="date" [(ngModel)]="newReceipt.date" name="date" [max]="today" required class="form-control form-control-sm"></div>
-                <div class="col-12"><label class="form-label">Payment Mode</label><select [(ngModel)]="newReceipt.paymentMode" name="paymentMode" required class="form-select form-select-sm"><option>Offline</option><option>Online</option><option>Cheque</option></select></div>
-              </div>
 
-              <div class="mt-4">
-                  <h4 class="h6">Fee Items</h4>
-                  <div class="vstack gap-2">
-                    @for(item of newReceipt.items; track $index; let i = $index) {
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="text" [(ngModel)]="item.description" name="desc{{i}}" placeholder="Description" required class="form-control form-control-sm">
-                            <input type="number" [(ngModel)]="item.amount" name="amount{{i}}" placeholder="Amount" required class="form-control form-control-sm" style="width: 7rem;">
-                            <button type="button" (click)="removeFeeItem(i)" class="btn btn-sm btn-outline-danger">&times;</button>
-                        </div>
-                    }
-                  </div>
-                  <button type="button" (click)="addFeeItem()" class="btn btn-sm btn-link text-decoration-none ps-0">+ Add Item</button>
+          <div class="mt-4">
+            <h4 class="h6">Fee Items</h4>
+            <div class="vstack gap-2">
+              @for(item of newReceipt.items; track $index; let i = $index) {
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" [(ngModel)]="item.description" name="desc{{i}}" placeholder="Description" required
+                  class="form-control form-control-sm">
+                <input type="number" [(ngModel)]="item.amount" name="amount{{i}}" placeholder="Amount" required
+                  class="form-control form-control-sm" style="width: 7rem;">
+                <button type="button" (click)="removeFeeItem(i)" class="btn btn-sm btn-outline-danger">&times;</button>
               </div>
-              
-              <p class="text-end fw-bold fs-5 mt-4">Total: ₹{{ calculateTotal().toLocaleString() }}</p>
-              
-              @if(error) {
-                <div class="alert alert-danger small p-2 mt-3">{{ error }}</div>
               }
+            </div>
+            <button type="button" (click)="addFeeItem()" class="btn btn-sm btn-link text-decoration-none ps-0">+ Add
+              Item</button>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="closeModal()">Cancel</button>
-            <button type="submit" [disabled]="!receiptForm.form.valid || calculateTotal() <= 0" class="btn btn-primary" data-bs-dismiss="modal">Save Receipt</button>
-          </div>
-        </form>
+
+          <p class="text-end fw-bold fs-5 mt-4">Total: ₹{{ calculateTotal().toLocaleString() }}</p>
+
+          @if(error) {
+          <div class="alert alert-danger small p-2 mt-3">{{ error }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="closeModal()">Cancel</button>
+          <button type="submit" [disabled]="!receiptForm.form.valid || calculateTotal() <= 0" class="btn btn-primary"
+            data-bs-dismiss="modal">Save Receipt</button>
+        </div>
+      </form>
       }
     </div>
   </div>

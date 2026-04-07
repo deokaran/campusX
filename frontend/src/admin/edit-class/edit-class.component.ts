@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClassService } from '../../services/class.service';
 import { UserService } from '../../services/user.service';
@@ -24,6 +24,9 @@ export class EditClassComponent implements OnInit {
   classService = inject(ClassService);
   userService = inject(UserService);
   departmentService = inject(DepartmentService);
+  cdr = inject(ChangeDetectorRef);
+
+  isSaving = false;
 
   classData: any = null;
   isEditMode = false;
@@ -56,7 +59,7 @@ export class EditClassComponent implements OnInit {
       } else {
         this.isEditMode = false;
         this.pageTitle = 'Add Class';
-        this.classData = { id: '', name: '', departmentId: '', teacherIds: [], studentIds: [], subjects: [], timeTable: [] };
+        this.classData = { customClassId: '', id: '', name: '', departmentId: '', teacherIds: [], studentIds: [], subjects: [], timeTable: [] };
         this.initializeTimeTable();
       }
 
@@ -73,6 +76,7 @@ export class EditClassComponent implements OnInit {
       });
       
       this.allStudents = allStudentsFromService.filter(student => !assignedStudentIdsInOtherClasses.has(student.id));
+      this.cdr.markForCheck();
     });
   }
 
@@ -109,6 +113,24 @@ export class EditClassComponent implements OnInit {
   removeSubject(index: number) {
     this.classData.subjects.splice(index, 1);
   }
+
+  isTeacherSelected(teacherId: string): boolean {
+    return this.classData.teacherIds.includes(teacherId);
+  }
+
+  onTeacherCheck(event: Event, teacherId: string) {
+    const input = event.target as HTMLInputElement;
+    if (input.checked) {
+      if (!this.isTeacherSelected(teacherId)) {
+        this.classData.teacherIds.push(teacherId);
+      }
+    } else {
+      const index = this.classData.teacherIds.indexOf(teacherId);
+      if (index > -1) {
+        this.classData.teacherIds.splice(index, 1);
+      }
+    }
+  }
   
   isStudentSelected(studentId: string): boolean {
     return this.classData.studentIds.includes(studentId);
@@ -129,13 +151,37 @@ export class EditClassComponent implements OnInit {
   }
 
   saveClass() {
-    if (this.isEditMode) {
-      this.classService.updateClass(this.classData);
-      alert('Class updated successfully!');
-    } else {
-      this.classService.addClass(this.classData);
-      alert('Class added successfully!');
+    if (this.isSaving) return;
+    this.isSaving = true;
+    const payload = { ...this.classData };
+    // Map customClassId -> classId for the backend
+    if (!this.isEditMode) {
+      payload.classId = this.classData.customClassId || '';
     }
-    setTimeout(() => this.router.navigate(['/admin/manage-classes']), 500);
+    if (this.isEditMode) {
+      this.classService.updateClass(payload).subscribe({
+        next: () => {
+          this.isSaving = false;
+          alert('Class updated successfully!');
+          this.router.navigate(['/admin/manage-classes']);
+        },
+        error: (err) => {
+          this.isSaving = false;
+          alert('Error updating class: ' + (err.error?.message || err.message));
+        }
+      });
+    } else {
+      this.classService.addClass(payload).subscribe({
+        next: () => {
+          this.isSaving = false;
+          alert('Class added successfully!');
+          this.router.navigate(['/admin/manage-classes']);
+        },
+        error: (err) => {
+          this.isSaving = false;
+          alert('Error adding class: ' + (err.error?.message || err.message));
+        }
+      });
+    }
   }
 }

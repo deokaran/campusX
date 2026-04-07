@@ -70,6 +70,12 @@
         color: #212529;
     }
 
+    &.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
     .sidebar-container:not(.expanded) & {
         justify-content: center;
     }

@@ -17,14 +17,16 @@
   <nav class="nav flex-column sidebar-nav">
     @for (item of menuItems; track item.path) {
       <a 
-        [routerLink]="item.path" 
+        [routerLink]="item.disabled ? null : item.path" 
         routerLinkActive="active"
-        (click)="onLinkClick()"
+        (click)="!item.disabled && onLinkClick()"
         class="nav-link"
         [class.theme-rose]="themeColor === 'rose'"
         [class.theme-amber]="themeColor === 'amber'"
         [class.theme-sky]="themeColor === 'sky'"
-        [title]="isExpanded ? '' : item.label">
+        [class.disabled]="item.disabled"
+        [attr.aria-disabled]="item.disabled ? 'true' : null"
+        [title]="item.disabled ? 'Unavailable until you are assigned to a class' : (isExpanded ? '' : item.label)">
         <i [class]="item.icon" class="nav-icon"></i>
         @if (isExpanded) {
           <span class="nav-text">{{ item.label }}</span>

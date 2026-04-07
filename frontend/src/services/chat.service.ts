@@ -25,25 +25,33 @@ export class ChatService {
 
   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   public messages$ = this.messagesSubject.asObservable();
+  private currentClassId: string | null = null;
 
-  constructor() {
-    this.loadMessages();
-  }
-
-  private loadMessages(): void {
-    this.http.get<ChatMessage[]>(this.apiUrl).subscribe(
-      messages => this.messagesSubject.next(messages),
-      error => console.error('Error loading chat messages:', error)
-    );
+  private normalizeMessage(message: ChatMessage): ChatMessage {
+    return {
+      ...message,
+      id: message.id || message._id || '',
+      _id: message._id || message.id || '',
+      timestamp: new Date(message.timestamp)
+    };
   }
 
   getMessages(classId: string): Observable<ChatMessage[]> {
+    if (this.currentClassId !== classId) {
+      this.currentClassId = classId;
+      this.refreshMessages(classId);
+    }
+
     return this.messages$.pipe(
-      map(messages => messages
-        .filter(m => m.classId === classId)
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      )
+      map(messages => messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()))
     );
+  }
+
+  refreshMessages(classId: string): void {
+    this.http.get<ChatMessage[]>(`${this.apiUrl}/class/${classId}`).subscribe({
+      next: (messages) => this.messagesSubject.next(messages.map(message => this.normalizeMessage(message))),
+      error: (error) => console.error('Error loading chat messages:', error)
+    });
   }
 
   sendMessage(classId: string, text: string): Observable<ChatMessage> {
@@ -54,9 +62,9 @@ export class ChatService {
 
     const newMessage = {
       classId,
-      senderId: currentUser.id,
+      senderId: currentUser.id || currentUser._id || '',
       senderName: currentUser.name || `${currentUser.firstName} ${currentUser.lastName}`,
-      senderAvatar: currentUser.details?.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser.id}`,
+      senderAvatar: currentUser.details?.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser.id || currentUser._id || ''}`,
       text: text.trim(),
       timestamp: new Date()
     };
@@ -64,8 +72,9 @@ export class ChatService {
     return this.http.post<ChatMessage>(this.apiUrl, newMessage).pipe(
       map(message => {
         const currentMessages = this.messagesSubject.getValue();
-        this.messagesSubject.next([...currentMessages, message]);
-        return message;
+        const normalizedMessage = this.normalizeMessage(message);
+        this.messagesSubject.next([...currentMessages, normalizedMessage]);
+        return normalizedMessage;
       })
     );
   }
@@ -80,6 +89,8 @@ export class ChatService {
   }
 
   getMessagesByClass(classId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/class/${classId}`);
+    return this.http.get<ChatMessage[]>(`${this.apiUrl}/class/${classId}`).pipe(
+      map(messages => messages.map(message => this.normalizeMessage(message)))
+    );
   }
 }

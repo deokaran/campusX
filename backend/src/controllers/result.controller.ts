@@ -1,15 +1,21 @@
 import { Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import Result from '../models/result.model';
 
 // 🔹 Create Result
 export const createResult = async (req: Request, res: Response) => {
   try {
-    const newResult = new Result(req.body);
+    const resultData = { ...req.body };
+    if (!resultData._id) {
+      resultData._id = uuidv4();
+    }
+    const newResult = new Result(resultData);
     await newResult.save();
 
     res.status(201).json(newResult);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating result' });
+    console.error('Error creating result:', error);
+    res.status(500).json({ message: 'Error creating result', error: String(error) });
   }
 };
 

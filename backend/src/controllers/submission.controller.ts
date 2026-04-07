@@ -1,11 +1,16 @@
 import { Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import Submission from '../models/submission.model';
 
 // 🔹 Submit Test
 export const submitTest = async (req: Request, res: Response) => {
   try {
+    const submissionData = { ...req.body };
+    if (!submissionData._id) {
+      submissionData._id = uuidv4();
+    }
     const newSubmission = new Submission({
-      ...req.body,
+      ...submissionData,
       submittedAt: new Date()
     });
 
@@ -13,7 +18,8 @@ export const submitTest = async (req: Request, res: Response) => {
 
     res.status(201).json(newSubmission);
   } catch (error) {
-    res.status(500).json({ message: 'Error submitting test' });
+    console.error('Error submitting test:', error);
+    res.status(500).json({ message: 'Error submitting test', error: String(error) });
   }
 };
 

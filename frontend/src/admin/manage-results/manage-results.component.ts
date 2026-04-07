@@ -49,13 +49,15 @@ export class ManageResultsComponent implements OnInit {
 
   selectStudent(student: User) {
     this.selectedStudent = student;
-    this.studentResults = this.userService.getStudentResults(student.id);
     this.selectedSemesterResult = null;
     this.editableResult = null;
     this.isAddingResult = false;
     this.newResult = null;
     this.updateAvailableSemesters(student);
-    this.cdr.markForCheck();
+    this.userService.getStudentResultsObservable(student.id).subscribe(results => {
+      this.studentResults = results;
+      this.cdr.markForCheck();
+    });
   }
 
   selectSemester(result: any) {
@@ -143,37 +145,49 @@ export class ManageResultsComponent implements OnInit {
   
   saveNewResult() {
     if (this.selectedStudent && this.newResult) {
-      // Fixed: Create complete result object with studentId
       const resultData = {
         ...this.newResult,
         studentId: this.selectedStudent.id
       };
-      
-      this.userService.addStudentResult(resultData);
-      alert('New result added successfully!');
-      
-      // Refresh after delay
-      setTimeout(() => {
-        if (this.selectedStudent) {
-          this.selectStudent(this.selectedStudent);
+
+      this.userService.addStudentResult(resultData).subscribe({
+        next: () => {
+          alert('New result added successfully!');
+          if (this.selectedStudent) {
+            this.userService.getStudentResultsObservable(this.selectedStudent.id).subscribe(results => {
+              this.studentResults = results;
+              this.isAddingResult = false;
+              this.newResult = null;
+              this.cdr.markForCheck();
+            });
+          }
+        },
+        error: (err) => {
+          alert('Error saving result: ' + (err.error?.message || err.message));
         }
-      }, 300);
+      });
     }
   }
 
   saveResult() {
     if (this.selectedStudent && this.editableResult) {
-      // Fixed: Call updateStudentResult with 2 parameters (resultId, result)
       const resultId = this.editableResult._id || this.editableResult.id;
-      this.userService.updateStudentResult(resultId, this.editableResult);
-      alert('Result updated successfully!');
-      
-      // Refresh after delay
-      setTimeout(() => {
-        if (this.selectedStudent) {
-          this.selectStudent(this.selectedStudent);
+      this.userService.updateStudentResult(resultId, this.editableResult).subscribe({
+        next: () => {
+          alert('Result updated successfully!');
+          if (this.selectedStudent) {
+            this.userService.getStudentResultsObservable(this.selectedStudent.id).subscribe(results => {
+              this.studentResults = results;
+              this.editableResult = null;
+              this.selectedSemesterResult = null;
+              this.cdr.markForCheck();
+            });
+          }
+        },
+        error: (err) => {
+          alert('Error updating result: ' + (err.error?.message || err.message));
         }
-      }, 300);
+      });
     }
   }
 

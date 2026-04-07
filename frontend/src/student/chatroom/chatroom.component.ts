@@ -64,9 +64,16 @@ export class ChatroomComponent implements OnInit, OnDestroy {
 
   sendMessage() {
     if (this.newMessage.trim() && this.classId) {
-      this.chatService.sendMessage(this.classId, this.newMessage);
-      this.newMessage = '';
-      this.cdr.markForCheck();
+      this.chatService.sendMessage(this.classId, this.newMessage).subscribe({
+        next: () => {
+          this.newMessage = '';
+          this.cdr.markForCheck();
+          setTimeout(() => this.scrollToBottom(), 0);
+        },
+        error: (error) => {
+          console.error('Error sending message:', error);
+        }
+      });
     }
   }
   

@@ -18,11 +18,11 @@ router.post('/', verifyToken, authorizeRoles('A'), createResult);
 // 🔹 Get all results (Admin/Teacher)
 router.get('/', verifyToken, authorizeRoles('A', 'T'), getResults);
 
+// 🔹 Get results by student (must be before /:id)
+router.get('/student/:studentId', verifyToken, getResultsByStudent);
+
 // 🔹 Get result by ID
 router.get('/:id', verifyToken, getResultById);
-
-// 🔹 Get results by student
-router.get('/student/:studentId', verifyToken, getResultsByStudent);
 
 // 🔹 Update result (Admin only)
 router.put('/:id', verifyToken, authorizeRoles('A'), updateResult);

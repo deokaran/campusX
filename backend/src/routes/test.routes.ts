@@ -18,11 +18,11 @@ router.post('/', verifyToken, authorizeRoles('T', 'A'), createTest);
 // 🔹 Get all tests
 router.get('/', verifyToken, getTests);
 
+// 🔹 Get tests by class (must be before /:id to avoid param collision)
+router.get('/class/:classId', verifyToken, getTestsByClass);
+
 // 🔹 Get test by ID
 router.get('/:id', verifyToken, getTestById);
-
-// 🔹 Get tests by class
-router.get('/class/:classId', verifyToken, getTestsByClass);
 
 // 🔹 Update test (Teacher/Admin)
 router.put('/:id', verifyToken, authorizeRoles('T', 'A'), updateTest);

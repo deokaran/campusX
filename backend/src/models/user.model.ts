@@ -45,7 +45,10 @@ interface AdminDetails {
 
 export interface IUser {
   _id: string;
-  name: string;
+  name?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   email: string;
   password?: string; // Made optional for response objects
   role: UserRole;
@@ -55,7 +58,10 @@ export interface IUser {
 // 🔹 Schema
 const userSchema = new Schema<IUser>({
   _id: { type: String, required: true },
-  name: { type: String, required: true },
+  name: { type: String, required: false, default: '' },
+  firstName: { type: String },
+  middleName: { type: String },
+  lastName: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: {

@@ -2,7 +2,10 @@
 @if(classData) {
   <div class="vstack gap-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <h2 class="h3 fw-bold text-dark mb-0">{{ classData.name }}</h2>
+      <div>
+        <h2 class="h3 fw-bold text-dark mb-0">{{ classData.name }}</h2>
+        <p class="text-muted mb-0">Class Code: {{ classData.id || classData._id }}</p>
+      </div>
       <div class="d-flex gap-2">
         <a [routerLink]="['performance']" class="btn btn-warning btn-sm d-flex align-items-center">
             <i class="fas fa-chart-line me-2"></i>Class Performance

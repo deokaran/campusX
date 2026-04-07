@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 
 export interface IClass {
   _id: string;
+  classId: string;
   name: string;
   teacherIds: string[];
   studentIds: string[];
@@ -11,6 +12,7 @@ export interface IClass {
 
 const classSchema = new Schema<IClass>({
   _id: { type: String, required: true },
+  classId: { type: String, required: true, unique: true, trim: true },
   name: { type: String, required: true },
   teacherIds: [{ type: String }],
   studentIds: [{ type: String }],
