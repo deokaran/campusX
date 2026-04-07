@@ -1,0 +1,111 @@
+
+@if(!selectedResult) {
+  <div class="card shadow-sm text-center">
+    <div class="card-body p-5">
+      <h2 class="card-title h3 mb-3">Select a Semester</h2>
+      <p class="text-muted mb-4">Please choose a semester to view your detailed results.</p>
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4 justify-content-center">
+        @for(sem of semesters; track sem) {
+          <div class="col">
+            <button (click)="selectSemester(sem)" class="semester-btn btn w-100 h-100 p-4 btn-outline-danger bg-danger-subtle border-2">
+              <span class="h5 fw-bold d-block">Semester {{sem}}</span>
+            </button>
+          </div>
+        } @empty {
+          <div class="col-12">
+            <p class="text-muted p-4">No results are available at the moment.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="vstack gap-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <button (click)="clearSelection()" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to Semesters
+        </button>
+        <button (click)="downloadPdf()" class="btn btn-danger btn-sm d-flex align-items-center">
+            <i class="fas fa-download me-2"></i>Download PDF
+        </button>
+    </div>
+
+    <div id="resultCard" class="card shadow-sm font-sans">
+      <div class="card-body p-5">
+        <!-- Header -->
+        <div class="text-center border-bottom pb-4 mb-5">
+            <p class="small text-muted">Shiromani Gurudwara Parbandhak Committee's</p>
+            <h1 class="h4 fw-bold text-dark">GURU NANAK KHALSA COLLEGE OF ARTS, SCIENCE & COMMERCE (AUTONOMOUS)</h1>
+            <p class="small text-muted">Nathalal Parekh Marg, Matunga East, Mumbai, Maharashtra 400019</p>
+        </div>
+
+        <!-- Student Details -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-start">
+                 <div class="small text-dark vstack gap-1">
+                    <div class="row gx-2">
+                        <div class="col-5 fw-semibold text-muted">Programme</div>
+                        <div class="col-auto fw-semibold text-muted">:</div>
+                        <div class="col">BACHELOR OF SCIENCE (INFORMATION TECHNOLOGY) NEP-2020</div>
+                    </div>
+                    <div class="row gx-2"><div class="col-5 fw-semibold text-muted">Semester</div><div class="col-auto fw-semibold text-muted">:</div><div class="col">SEMESTER - {{selectedResult.semester}}</div></div>
+                    <div class="row gx-2"><div class="col-5 fw-semibold text-muted">PRN/Reg. No.</div><div class="col-auto fw-semibold text-muted">:</div><div class="col">{{selectedResult.prn}}</div></div>
+                    <div class="row gx-2"><div class="col-5 fw-semibold text-muted">Month and Year of Examination</div><div class="col-auto fw-semibold text-muted">:</div><div class="col">{{selectedResult.examMonthYear}}</div></div>
+                    <div class="row gx-2"><div class="col-5 fw-semibold text-muted">Examination Seat No.</div><div class="col-auto fw-semibold text-muted">:</div><div class="col">{{selectedResult.seatNo}}</div></div>
+                    <div class="row gx-2"><div class="col-5 fw-semibold text-muted">Name of Candidate</div><div class="col-auto fw-semibold text-muted">:</div><div class="col text-uppercase">{{student?.firstName}} {{student?.lastName}}</div></div>
+                </div>
+                <div class="text-center ms-4 flex-shrink-0">
+                    <img [src]="student?.details?.avatarUrl" alt="Student Photo" class="object-cover border p-1" style="width: 96px;">
+                    <p class="small mt-1 fw-monospace text-muted">{{student?.id}}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Marks Table -->
+        <div class="table-responsive">
+            <table class="table table-bordered small">
+                <thead class="table-light">
+                    <tr class="text-center">
+                        <th class="p-2 fw-semibold align-middle">Sr. No.</th>
+                        <th class="p-2 fw-semibold align-middle">Paper Code</th>
+                        <th class="p-2 fw-semibold align-middle text-start">Paper</th>
+                        <th class="p-2 fw-semibold align-middle">Internal</th>
+                        <th class="p-2 fw-semibold align-middle">External</th>
+                        <th class="p-2 fw-semibold align-middle">Total</th>
+                        <th class="p-2 fw-semibold align-middle">Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(subject of selectedResult.subjects; track subject.srNo) {
+                        <tr class="text-center">
+                            <td class="p-2 align-middle table-light">{{subject.srNo}}</td>
+                            <td class="p-2 align-middle table-light">{{subject.paperCode}}</td>
+                            <td class="p-2 align-middle text-start fw-medium text-dark">{{subject.paper}}</td>
+                            <td class="p-2 align-middle table-light">{{subject.internal ?? '--'}}</td>
+                            <td class="p-2 align-middle table-light">{{subject.external ?? '--'}}</td>
+                            <td class="p-2 align-middle fw-bold table-light">{{subject.total}}</td>
+                            <td class="p-2 align-middle fw-bold text-danger table-light">{{subject.grade}}</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fw-bold text-dark">
+                    <tr class="text-center">
+                        <td colspan="3" class="p-2 text-end">Grand Total</td>
+                        <td class="p-2">{{totalInternal}}</td>
+                        <td class="p-2">{{totalExternal}}</td>
+                        <td class="p-2">{{grandTotal}}</td>
+                        <td class="p-2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Final Remarks -->
+        <div class="mt-5 d-flex align-items-center">
+            <strong class="fw-semibold text-dark me-3">Final Remarks:</strong>
+            <span class="badge text-bg-success fs-6">{{selectedResult.finalRemarks}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+}

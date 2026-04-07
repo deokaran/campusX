@@ -1,0 +1,67 @@
+
+@if(test) {
+  <div class="vstack gap-5">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="h3 fw-bold text-dark mb-1">Submissions for "{{ test.title }}"</h2>
+        <p class="text-muted mb-0">Total Marks: {{ totalTestMarks }}</p>
+      </div>
+      <a routerLink="/teacher/manage-tests" class="btn btn-secondary btn-sm d-flex align-items-center">
+         <i class="fas fa-arrow-left me-2"></i>Back to Manage Tests
+      </a>
+    </div>
+    
+     @if(submissionDetails.length > 0) {
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <p class="small text-muted">Total Submissions</p>
+                        <p class="h3 fw-bold text-dark">{{ submissionDetails.length }}</p>
+                    </div>
+                </div>
+            </div>
+             <div class="col">
+                 <div class="card shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <p class="small text-muted">Class Average</p>
+                        <p class="h3 fw-bold text-success">{{ averageScore | number:'1.1-2' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title h5 mb-3">Student Scores</h3>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+              <thead class="table-light">
+                  <tr>
+                      <th class="text-muted small">Student Name</th>
+                      <th class="text-muted small text-center">Score</th>
+                      <th class="text-muted small">Submitted At</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  @for(sub of submissionDetails; track sub.id) {
+                  <tr>
+                      <td class="fw-semibold text-dark">{{ sub.studentName }}</td>
+                      <td class="text-center fw-bold text-success">{{ sub.score }} / {{ sub.totalMarks }}</td>
+                      <td class="text-secondary">{{ sub.submittedAt | date:'medium' }}</td>
+                  </tr>
+                  } @empty {
+                     <tr>
+                        <td colspan="3" class="text-center text-muted p-5">There are no submissions for this test yet.</td>
+                    </tr>
+                  }
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+    <p class="text-center text-muted">Loading submission details...</p>
+}

@@ -1,0 +1,131 @@
+
+@if (classData) {
+  <div class="card shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+        <h2 class="card-title h3">{{ pageTitle }}</h2>
+        <a routerLink="/admin/manage-classes" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+      </div>
+      <form #classForm="ngForm" (ngSubmit)="saveClass()" class="vstack gap-5">
+        <!-- Class Details -->
+        <fieldset>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="className" class="form-label fw-semibold">Class Name</label>
+              <input id="className" type="text" [(ngModel)]="classData.name" name="className" required class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label for="department" class="form-label fw-semibold">Department</label>
+              <select id="department" [(ngModel)]="classData.departmentId" name="department" required class="form-select">
+                <option value="" disabled>Select Department</option>
+                @for(dept of departments; track dept.id) {
+                  <option [value]="dept.id">{{ dept.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </fieldset>
+        
+        <!-- Subjects Management -->
+        <fieldset>
+          <legend class="h5 fw-semibold text-dark mb-3">Manage Subjects</legend>
+          <div class="vstack gap-3">
+            @for(subject of classData.subjects; track $index; let i = $index) {
+              <div class="p-3 border rounded-3 bg-light vstack gap-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="fw-medium text-dark">Subject {{i + 1}}</label>
+                  <button type="button" (click)="removeSubject(i)" class="btn-close" aria-label="Remove Subject"></button>
+                </div>
+                <div class="row g-2">
+                  <div class="col-sm-2"><label class="form-label small">Code</label><input type="text" [(ngModel)]="subject.code" name="subjectCode{{i}}" required class="form-control form-control-sm"></div>
+                  <div class="col-sm-4"><label class="form-label small">Name</label><input type="text" [(ngModel)]="subject.name" name="subjectName{{i}}" required class="form-control form-control-sm"></div>
+                  <div class="col-sm-3"><label class="form-label small">Teacher</label><select [(ngModel)]="subject.teacherId" name="subjectTeacher{{i}}" required class="form-select form-select-sm"><option value="">Assign</option>@for(teacher of allTeachers; track teacher.id){<option [value]="teacher.id">{{teacher.firstName}} {{teacher.lastName}}</option>}</select></div>
+                  <div class="col-sm-2"><label class="form-label small">Marks</label><input type="number" [(ngModel)]="subject.totalMarks" name="subjectMarks{{i}}" class="form-control form-control-sm"></div>
+                  <div class="col-sm-1"><label class="form-label small">Credits</label><input type="number" [(ngModel)]="subject.credits" name="subjectCredits{{i}}" class="form-control form-control-sm"></div>
+                </div>
+              </div>
+            }
+          </div>
+          <button type="button" (click)="addSubject()" class="btn btn-sm btn-outline-primary mt-3">+ Add Subject</button>
+        </fieldset>
+
+        <!-- Assignments -->
+        <fieldset class="row g-4">
+          <legend class="h5 fw-semibold text-dark mb-0">Assignments</legend>
+          <div class="col-md-6">
+              <label class="form-label">Assign Teachers to Class</label>
+              <div class="border rounded-3 p-3" style="max-height: 12rem; overflow-y: auto;">
+                  @for(teacher of allTeachers; track teacher.id) {
+                      <div class="form-check">
+                          <input type="checkbox" [id]="'teacher-'+teacher.id" [value]="teacher.id" [(ngModel)]="classData.teacherIds" name="teachers-{{teacher.id}}" class="form-check-input">
+                          <label [for]="'teacher-'+teacher.id" class="form-check-label">{{teacher.firstName}} {{teacher.lastName}} ({{teacher.id}})</label>
+                      </div>
+                  }
+              </div>
+          </div>
+          <div class="col-md-6">
+              <label class="form-label">Assign Students to Class</label>
+              <div class="border rounded-3 p-3" style="max-height: 12rem; overflow-y: auto;">
+                  @for(student of allStudents; track student.id) {
+                      <div class="form-check">
+                          <input type="checkbox" [id]="'student-'+student.id" [value]="student.id" [checked]="isStudentSelected(student.id)" (change)="onStudentCheck($event, student.id)" name="students-{{student.id}}" class="form-check-input">
+                          <label [for]="'student-'+student.id" class="form-check-label">{{student.firstName}} {{student.lastName}} ({{student.id}})</label>
+                      </div>
+                  }
+              </div>
+          </div>
+        </fieldset>
+        
+        <!-- Time Table Management -->
+        <fieldset>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <legend class="h5 fw-semibold text-dark mb-0">Manage Time Table</legend>
+            <button type="button" (click)="addTimeTableRow()" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-plus me-1"></i>Add Row
+            </button>
+          </div>
+          <div class="table-responsive">
+              <table class="table table-bordered text-center align-middle">
+                  <thead class="table-light">
+                      <tr>
+                          <th class="p-2 small" style="width: 150px;">Time</th>
+                          @for(day of dayHeaders; track day) { <th class="p-2 small">{{day}}</th> }
+                          <th class="p-2 small" style="width: 50px;"></th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      @for(row of classData.timeTable; track $index) {
+                          <tr>
+                              <td class="p-1">
+                                <input type="text" [(ngModel)]="row.time" [name]="'time-' + $index" class="form-control form-control-sm text-center" placeholder="00:00 - 00:00">
+                              </td>
+                              @for(day of days; track day) {
+                                  <td class="p-1">
+                                      <input type="text" [(ngModel)]="row[day]" [name]="'tt-' + $index + '-' + day" class="form-control form-control-sm text-center" placeholder="--">
+                                  </td>
+                              }
+                              <td class="p-1">
+                                <button type="button" (click)="removeTimeTableRow($index)" class="btn btn-sm btn-link text-danger p-0" title="Remove Row">
+                                  <i class="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                          </tr>
+                      }
+                  </tbody>
+              </table>
+          </div>
+        </fieldset>
+          
+        <div class="d-flex justify-content-end pt-4 border-top">
+            <button type="submit" [disabled]="!classForm.valid" class="btn btn-success d-flex align-items-center">
+              <i class="fas fa-save me-2"></i>Save Class
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+} @else {
+  <p class="text-center text-muted">Loading class details...</p>
+}

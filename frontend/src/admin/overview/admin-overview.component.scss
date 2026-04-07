@@ -1,0 +1,19 @@
+@keyframes grow {
+  from {
+    width: 0%;
+  }
+}
+
+.bar-animation {
+  animation: grow 0.7s ease-out forwards;
+}
+
+@keyframes donut-segment-fill {
+  to {
+    stroke-dasharray: var(--final-dasharray);
+  }
+}
+
+.donut-segment-animation {
+  animation: donut-segment-fill 1s ease-out forwards;
+}

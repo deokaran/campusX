@@ -1,0 +1,92 @@
+<div class="container-fluid p-4" *ngIf="department">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 mb-1">{{ department.name }}</h2>
+      <p class="text-muted mb-0">Code: {{ department.code }} | ID: {{ department.id }}</p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="router.navigate(['/admin/manage-departments'])">
+      <i class="fas fa-arrow-left me-2"></i>Back to Departments
+    </button>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Stats Cards -->
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100 bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-white-50 text-uppercase mb-2">Total Students</h6>
+              <h2 class="display-4 fw-bold mb-0">{{ totalStudents }}</h2>
+            </div>
+            <i class="fas fa-user-graduate fa-3x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100 bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-white-50 text-uppercase mb-2">Total Teachers</h6>
+              <h2 class="display-4 fw-bold mb-0">{{ totalTeachers }}</h2>
+            </div>
+            <i class="fas fa-chalkboard-teacher fa-3x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 h-100 bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-white-50 text-uppercase mb-2">Total Classes</h6>
+              <h2 class="display-4 fw-bold mb-0">{{ totalClasses }}</h2>
+            </div>
+            <i class="fas fa-school fa-3x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white py-3">
+          <h5 class="card-title mb-0">Head of Department</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Assign HOD</label>
+            <select class="form-select" [ngModel]="department.headOfDepartmentId" (ngModelChange)="assignHOD($event)">
+              <option [ngValue]="undefined" disabled selected>Select a teacher</option>
+              <option *ngFor="let teacher of departmentTeachers" [value]="teacher.id">
+                {{ teacher.firstName }} {{ teacher.lastName }} ({{ teacher.id }})
+              </option>
+            </select>
+            <div class="form-text text-muted mt-2">
+              Select a teacher from this department to assign as the Head of Department.
+            </div>
+          </div>
+          
+          <div *ngIf="department.headOfDepartmentId" class="alert alert-success mt-3">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-user-tie fa-2x me-3"></i>
+              <div>
+                <strong>Current HOD:</strong>
+                <ng-container *ngFor="let teacher of departmentTeachers">
+                  <span *ngIf="teacher.id === department.headOfDepartmentId">
+                    {{ teacher.firstName }} {{ teacher.lastName }}
+                  </span>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

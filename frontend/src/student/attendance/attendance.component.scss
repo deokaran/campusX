@@ -1,0 +1,10 @@
+
+@keyframes donut-segment-fill {
+  to {
+    stroke-dasharray: var(--final-dasharray);
+  }
+}
+
+.donut-segment-animation {
+  animation: donut-segment-fill 1s 0.2s ease-out forwards;
+}

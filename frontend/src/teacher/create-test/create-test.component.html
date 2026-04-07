@@ -1,0 +1,106 @@
+
+<div class="card shadow-sm mx-auto" style="max-width: 56rem;">
+  <div class="card-body p-4 p-lg-5">
+    <h2 class="card-title h3 mb-4 border-bottom pb-3">Create New Test</h2>
+
+    <form #testForm="ngForm" (ngSubmit)="createTest()">
+      @if(currentStep === 1) {
+        <!-- Step 1: Test Details -->
+        <fieldset class="vstack gap-4">
+          <legend class="h5 fw-semibold text-dark">Test Details</legend>
+          <div class="row g-4">
+              <div class="col-12">
+                  <label for="title" class="form-label">Test Title</label>
+                  <input type="text" id="title" name="title" [(ngModel)]="test.title" required #title="ngModel" class="form-control">
+              </div>
+              <div class="col-md-6">
+                  <label for="classId" class="form-label">Class</label>
+                  <select id="classId" name="classId" [(ngModel)]="test.classId" (change)="onClassChange($any($event.target).value)" required #classId="ngModel" class="form-select">
+                      @for(c of myClasses; track c.id) {
+                      <option [value]="c.id">{{c.name}}</option>
+                      }
+                  </select>
+              </div>
+              <div class="col-md-6">
+                  <label for="subject" class="form-label">Subject</label>
+                  <select id="subject" name="subject" [(ngModel)]="test.subject" required #subject="ngModel" class="form-select">
+                      @for(s of subjects; track s.code) {
+                      <option [value]="s.code">{{s.name}}</option>
+                      }
+                  </select>
+              </div>
+          </div>
+        </fieldset>
+        <div class="d-flex justify-content-end pt-4 mt-4 border-top">
+          <button type="button" (click)="proceedToStep2()" [disabled]="title.invalid || classId.invalid || subject.invalid" class="btn btn-warning d-flex align-items-center">
+            Next: Add Questions <i class="fas fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      } @else if(currentStep === 2) {
+        <!-- Step 2: Questions -->
+        <div class="vstack gap-4">
+          <div class="alert alert-secondary">
+            <h5 class="alert-heading h6 fw-bold text-dark">{{ test.title }}</h5>
+            <p class="mb-0 small">Class: {{ getClassName(test.classId) }} | Subject: {{ getSubjectName(test.subject) }}</p>
+          </div>
+          
+          <fieldset class="vstack gap-4">
+            <legend class="h5 fw-semibold text-dark">Questions</legend>
+            <div class="vstack gap-4">
+              @for(q of questions; track $index; let i = $index) {
+                <div class="p-3 border rounded-3 bg-light vstack gap-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <label class="fw-medium text-dark">Question {{i + 1}}</label>
+                    @if (questions.length > 1) {
+                      <button type="button" (click)="removeQuestion(i)" class="btn-close" aria-label="Remove Question"></button>
+                    }
+                  </div>
+                  <textarea [(ngModel)]="q.text" name="qText{{i}}" required rows="2" class="form-control" placeholder="Enter question text..."></textarea>
+                  <div class="row g-3">
+                    @for(opt of q.options; track $index; let o_idx = $index) {
+                      <div class="col-sm-6">
+                        <label class="form-label small">Option {{o_idx + 1}}</label>
+                        <input type="text" [(ngModel)]="q.options[o_idx]" name="qOpt{{i}}-{{o_idx}}" required class="form-control">
+                      </div>
+                    }
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-sm-6">
+                      <label class="form-label small">Correct Answer</label>
+                      <select [(ngModel)]="q.correctAnswer" name="qAns{{i}}" required class="form-select">
+                        <option value="" disabled>Select the correct option</option>
+                        @for(opt of q.options; track $index) {
+                          @if(opt) { <option [value]="opt">{{opt}}</option> }
+                        }
+                      </select>
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label small">Marks</label>
+                      <input type="number" [(ngModel)]="q.marks" name="qMarks{{i}}" required class="form-control">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label small">Explanation / Comment</label>
+                    <input type="text" [(ngModel)]="q.explanation" name="qExp{{i}}" class="form-control" placeholder="(Optional) Visible to students after results are revealed.">
+                  </div>
+                </div>
+              }
+            </div>
+            <button type="button" (click)="addQuestion()" class="btn btn-sm btn-outline-warning align-self-start">
+              + Add Another Question
+            </button>
+          </fieldset>
+
+          <div class="d-flex justify-content-between pt-4 border-top">
+             <button type="button" (click)="backToStep1()" class="btn btn-secondary d-flex align-items-center">
+              <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button type="submit" [disabled]="!testForm.form.valid" class="btn btn-success">
+              Create Test
+            </button>
+          </div>
+        </div>
+      }
+    </form>
+  </div>
+</div>

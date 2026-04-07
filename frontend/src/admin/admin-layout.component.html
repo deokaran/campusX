@@ -1,0 +1,40 @@
+<div class="layout-wrapper">
+  <!-- Desktop Sidebar -->
+  <div class="sidebar-container d-none d-lg-block">
+    <app-sidebar 
+      [(isExpanded)]="isSidebarExpanded" 
+      [menuItems]="menuItems"
+      themeColor="sky"
+      roleName="Admin"
+    />
+  </div>
+
+  <!-- Mobile Offcanvas Sidebar -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="skyMobileMenu" aria-labelledby="skyMobileMenuLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="skyMobileMenuLabel">Admin Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <app-sidebar
+        [isExpanded]="true"
+        [menuItems]="menuItems"
+        themeColor="sky"
+        roleName="Admin"
+      />
+    </div>
+  </div>
+
+  <div class="main-content">
+      <app-header 
+        [pageTitle]="pageTitle$ | async"
+        themeColor="sky"
+      >
+      </app-header>
+    <main class="content-body">
+      <div class="container-fluid p-4">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

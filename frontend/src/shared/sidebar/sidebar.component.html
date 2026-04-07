@@ -1,0 +1,35 @@
+<aside 
+  class="sidebar-container"
+  [class.expanded]="isExpanded">
+  
+  <div class="sidebar-header">
+    <div class="logo-wrapper">
+      <app-logo [size]="40"></app-logo>
+      @if (isExpanded) {
+        <span class="logo-text">CampusX</span>
+      }
+    </div>
+    <button (click)="toggle()" class="btn btn-icon toggle-btn d-none d-lg-block">
+      <i class="fas" [class.fa-chevron-left]="isExpanded" [class.fa-chevron-right]="!isExpanded"></i>
+    </button>
+  </div>
+  
+  <nav class="nav flex-column sidebar-nav">
+    @for (item of menuItems; track item.path) {
+      <a 
+        [routerLink]="item.path" 
+        routerLinkActive="active"
+        (click)="onLinkClick()"
+        class="nav-link"
+        [class.theme-rose]="themeColor === 'rose'"
+        [class.theme-amber]="themeColor === 'amber'"
+        [class.theme-sky]="themeColor === 'sky'"
+        [title]="isExpanded ? '' : item.label">
+        <i [class]="item.icon" class="nav-icon"></i>
+        @if (isExpanded) {
+          <span class="nav-text">{{ item.label }}</span>
+        }
+      </a>
+    }
+  </nav>
+</aside>

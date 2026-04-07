@@ -1,0 +1,74 @@
+
+@if (test) {
+  <div class="card shadow-sm mx-auto" style="max-width: 56rem;">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+          <h2 class="card-title h3 mb-1">{{ test.title }} - Result</h2>
+          @if(submission) {
+            <p class="text-muted mb-0 small">Submitted on: {{ submission.submittedAt | date:'medium' }}</p>
+          }
+        </div>
+        <a routerLink="/student/tests" class="btn btn-secondary btn-sm">
+           <i class="fas fa-arrow-left me-2"></i>Back to Tests
+        </a>
+      </div>
+
+      @if (submission) {
+        <div class="my-4 p-4 bg-light rounded-3 text-center">
+          <p class="small text-muted mb-2">Your Score</p>
+          <p class="h1 fw-bold text-danger">
+              {{ submission.score }} / <span class="h3 text-dark">{{ submission.totalMarks }}</span>
+          </p>
+          <div class="progress mt-3 mx-auto" role="progressbar" [attr.aria-valuenow]="scorePercentage" style="height: 10px; max-width: 200px;">
+            <div class="progress-bar" 
+                [class.bg-success]="scorePercentage >= 75"
+                [class.bg-warning]="scorePercentage < 75 && scorePercentage >= 40"
+                [class.bg-danger]="scorePercentage < 40"
+                [style.width.%]="scorePercentage"></div>
+          </div>
+        </div>
+
+        <div class="vstack gap-4">
+          @for(question of test.questions; track $index; let i = $index) {
+            <div class="p-3 border rounded-3"
+                [class.border-success-subtle]="isCorrect(i)"
+                [class.bg-success-subtle]="isCorrect(i)"
+                [class.border-danger-subtle]="!isCorrect(i)"
+                [class.bg-danger-subtle]="!isCorrect(i)">
+              <div class="d-flex justify-content-between align-items-start">
+                <p class="fw-semibold text-dark flex-grow-1">{{ i + 1 }}. {{ question.text }}</p>
+                <span class="ms-4 small fw-bold"
+                      [class.text-success-emphasis]="isCorrect(i)"
+                      [class.text-danger-emphasis]="!isCorrect(i)">
+                  {{ isCorrect(i) ? 'Correct' : 'Incorrect' }} (+{{ isCorrect(i) ? question.marks : 0 }})
+                </span>
+              </div>
+              <div class="mt-3 small vstack gap-2">
+                <p><strong class="fw-medium text-muted">Your Answer:</strong> <span class="text-dark">{{ submission.answers[i] || 'Not Answered' }}</span></p>
+                <p><strong class="fw-medium text-muted">Correct Answer:</strong> <span class="text-dark">{{ question.correctAnswer }}</span></p>
+              </div>
+              @if(question.explanation) {
+                <div class="mt-3 pt-3 border-top small"
+                    [class.border-success-subtle]="isCorrect(i)"
+                    [class.border-danger-subtle]="!isCorrect(i)">
+                  <p><strong class="fw-medium text-muted">Explanation:</strong> <span class="text-secondary fst-italic">{{ question.explanation }}</span></p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="my-4 text-center p-4 bg-secondary-subtle rounded-3">
+            <p class="small text-muted">Your Score</p>
+            <p class="h1 fw-bold text-dark">
+                0 / <span class="h3">{{ totalTestMarks }}</span>
+            </p>
+            <p class="mt-2 h6 fw-semibold text-danger">Not Attempted</p>
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <p class="text-center text-muted">Loading test result...</p>
+}

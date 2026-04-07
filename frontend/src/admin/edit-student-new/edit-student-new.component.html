@@ -1,0 +1,122 @@
+@if (student) {
+  <div class="card shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+        <h2 class="card-title h3">{{ pageTitle }}</h2>
+        <a routerLink="/admin/manage-students" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+      </div>
+      <form #studentForm="ngForm" (ngSubmit)="saveStudent()" class="vstack gap-5">
+        
+        <!-- Profile Picture Section -->
+        <fieldset>
+          <legend class="h5 fw-semibold text-dark mb-3">Profile Picture</legend>
+          <div class="row g-3">
+            <div class="col-12 text-center">
+              <div class="position-relative d-inline-block">
+                <img [src]="profilePic || 'https://via.placeholder.com/150?text=No+Photo'" 
+                     alt="Student Photo" 
+                     class="rounded-circle border border-4 border-light shadow-sm"
+                     style="width: 150px; height: 150px; object-fit: cover;">
+                <label for="profilePicInput" class="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center bg-primary text-white rounded-circle"
+                       style="width: 36px; height: 36px; cursor: pointer; border: 2px solid white;">
+                  <i class="fas fa-camera"></i>
+                </label>
+                <input id="profilePicInput" type="file" class="d-none" (change)="onProfilePicChange($event)" accept="image/*">
+              </div>
+              <p class="text-muted small mt-2 mb-0">Click camera icon to upload photo (Max 10MB)</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="h5 fw-semibold text-dark mb-3">Personal Details</legend>
+          <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" [(ngModel)]="student.firstName" name="firstName" required class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Middle Name</label>
+                <input type="text" [(ngModel)]="student.middleName" name="middleName" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" [(ngModel)]="student.lastName" name="lastName" required class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" [(ngModel)]="student.email" name="email" required class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Mobile Number</label>
+                <input type="tel" [(ngModel)]="student.details.mobile" name="mobile" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" [(ngModel)]="student.details.dob" name="dob" [max]="today" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Guardian Number</label>
+                <input type="tel" [(ngModel)]="student.details.guardianNo" name="guardianNo" class="form-control">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="h5 fw-semibold text-dark mb-3">Academic Details</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Department <span class="text-danger">*</span></label>
+                <select [(ngModel)]="student.details.departmentId" name="department" required class="form-select">
+                  <option value="" disabled>Select Department</option>
+                  @for(dept of departments; track dept.id || dept._id) {
+                    <option [value]="dept.id || dept._id">{{ dept.name }}</option>
+                  }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Degree</label>
+                <input type="text" [(ngModel)]="student.details.degree" name="degree" class="form-control" placeholder="e.g., B.Tech">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">PRN <span class="text-danger">*</span></label>
+                <input type="text" [(ngModel)]="student.details.prn" name="prn" placeholder="e.g. 2023016401665115" required class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Class ID <span class="text-danger">*</span></label>
+                <input type="text" [(ngModel)]="student.details.classId" name="classId" required class="form-control" placeholder="e.g., CS-2022-A">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Roll Number <span class="text-danger">*</span></label>
+                <input type="text" [(ngModel)]="student.details.rollNo" name="rollNo" required class="form-control" placeholder="e.g., 101">
+            </div>
+          </div>
+        </fieldset>
+        
+        <fieldset>
+          <legend class="h5 fw-semibold text-dark mb-3">Financial Details</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Total Fees</label>
+                <input type="number" [(ngModel)]="student.details.fees.total" name="feesTotal" class="form-control" placeholder="0">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fees Paid</label>
+                <input type="number" [(ngModel)]="student.details.fees.paid" name="feesPaid" class="form-control" placeholder="0">
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="d-flex justify-content-end pt-4 border-top">
+            <button type="submit" [disabled]="!studentForm.valid" class="btn btn-success d-flex align-items-center">
+              <i class="fas fa-save me-2"></i>Save Student
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+} @else {
+  <p class="text-center text-muted">Loading student details...</p>
+}

@@ -1,0 +1,60 @@
+{
+  "users": [
+    {
+      "_id": "A00001",
+      "name": "Dr. Rajesh Kumar",
+      "email": "admin@campusx.edu",
+      "password": "placeholder_will_be_hashed_during_seeding",
+      "role": "A",
+      "details": {
+        "fullName": "Dr. Rajesh Kumar",
+        "role": "Principal",
+        "mobile": "+91 9876543210"
+      }
+    }
+  ],
+  "departments": [
+    {
+      "_id": "DEPT-CS",
+      "name": "Computer Science",
+      "code": "CS",
+      "description": "Department of Computer Science and Engineering",
+      "headOfDepartment": "Dr. Sarah Johnson"
+    },
+    {
+      "_id": "DEPT-EC",
+      "name": "Electronics",
+      "code": "EC",
+      "description": "Department of Electronics and Communication Engineering",
+      "headOfDepartment": "Prof. Robert Williams"
+    },
+    {
+      "_id": "DEPT-ME",
+      "name": "Mechanical",
+      "code": "ME",
+      "description": "Department of Mechanical Engineering",
+      "headOfDepartment": "Prof. David Brown"
+    },
+    {
+      "_id": "DEPT-CE",
+      "name": "Civil",
+      "code": "CE",
+      "description": "Department of Civil Engineering",
+      "headOfDepartment": "Prof. James Anderson"
+    },
+    {
+      "_id": "DEPT-EE",
+      "name": "Electrical",
+      "code": "EE",
+      "description": "Department of Electrical Engineering",
+      "headOfDepartment": "Dr. Kumar Patel"
+    }
+  ],
+  "classes": [],
+  "tests": [],
+  "submissions": [],
+  "results": [],
+  "receipts": [],
+  "events": [],
+  "chatmessages": []
+}

@@ -1,0 +1,93 @@
+
+<div class="vstack gap-5">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h2 class="card-title h3 mb-4">My Attendance Summary</h2>
+      <div class="row align-items-center">
+        <!-- Donut Chart -->
+        <div class="col-md-4 d-flex justify-content-center">
+          <div class="position-relative" style="width: 192px; height: 192px;">
+            <svg class="w-100 h-100" viewBox="0 0 36 36">
+                <path class="text-body-tertiary"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="currentColor" stroke-width="3.5" />
+                <path class="text-danger donut-segment-animation"
+                    [style.--final-dasharray]="overall.percentage + ', 100'"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none" stroke="currentColor" stroke-width="3.5" stroke-dasharray="0, 100"/>
+            </svg>
+            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                <span class="h1 fw-bold text-dark">{{ overall.percentage }}%</span>
+                <span class="small text-muted d-block">Overall</span>
+            </div>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="col-md-8">
+            <div class="row row-cols-1 row-cols-sm-2 g-4 text-center">
+                <div class="col">
+                    <div class="p-3 bg-light rounded-3">
+                        <p class="h2 fw-bold text-dark">{{ overall.attended }}</p>
+                        <p class="small text-muted mb-0">Lectures Attended</p>
+                    </div>
+                </div>
+                <div class="col">
+                     <div class="p-3 bg-light rounded-3">
+                        <p class="h2 fw-bold text-dark">{{ overall.held }}</p>
+                        <p class="small text-muted mb-0">Total Lectures</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h3 class="card-title h5 mb-3">Subject-wise Attendance</h3>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="text-muted small">Subject</th>
+              <th class="text-muted small text-center">Held</th>
+              <th class="text-muted small text-center">Attended</th>
+              <th class="text-muted small" style="min-width: 150px;">Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(subject of attendanceSummary; track subject.subjectCode) {
+              <tr>
+                <td class="fw-semibold text-dark">{{ subject.subjectName }}</td>
+                <td class="text-center text-secondary">{{ subject.lecturesHeld }}</td>
+                <td class="text-center text-secondary">{{ subject.lecturesAttended }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1" role="progressbar" [attr.aria-valuenow]="subject.percentage" style="height: 10px;">
+                      <div class="progress-bar" 
+                           [class.bg-success]="subject.percentage >= 75"
+                           [class.bg-warning]="subject.percentage < 75 && subject.percentage >= 50"
+                           [class.bg-danger]="subject.percentage < 50"
+                           [style.width.%]="subject.percentage"></div>
+                    </div>
+                     <span class="ms-2 small fw-semibold"
+                        [class.text-success]="subject.percentage >= 75"
+                        [class.text-warning]="subject.percentage < 75 && subject.percentage >= 50"
+                        [class.text-danger]="subject.percentage < 50">
+                        {{subject.percentage}}%
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="text-center text-muted p-4">No attendance data is available yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

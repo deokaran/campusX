@@ -1,0 +1,8 @@
+
+.semester-btn {
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    &:hover {
+        transform: translateY(-5px);
+        background-color: var(--bs-warning-bg-subtle) !important;
+    }
+}

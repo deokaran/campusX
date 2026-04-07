@@ -1,0 +1,19 @@
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+    padding: 0 1.5rem;
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.btn-icon {
+    color: #495057;
+    font-size: 1.25rem;
+
+    &:hover {
+        color: #212529;
+    }
+}

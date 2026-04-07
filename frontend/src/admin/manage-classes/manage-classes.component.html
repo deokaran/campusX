@@ -1,0 +1,28 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="card-title h3">Manage Classes</h2>
+      <a routerLink="/admin/manage-classes/add" class="btn btn-primary btn-sm d-flex align-items-center">
+        <i class="fas fa-plus me-2"></i>Add Class
+      </a>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+      @for(c of classes; track c.id) {
+          <div class="col">
+            <div class="card h-100">
+              <div class="card-body">
+                <h3 class="card-title h5 text-primary">{{c.name}} ({{c.id}})</h3>
+                <p class="card-text small text-muted mt-2">Teachers: {{c.teacherIds.length}}</p>
+                <p class="card-text small text-muted">Students: {{c.studentIds.length}}</p>
+              </div>
+              <div class="card-footer bg-light">
+                <a [routerLink]="['edit', c.id]" class="btn btn-sm btn-outline-primary w-100">Manage Class</a>
+              </div>
+            </div>
+          </div>
+      }
+    </div>
+  </div>
+</div>

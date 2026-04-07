@@ -1,0 +1,143 @@
+
+@if(showModal) {
+  <div class="modal fade show d-block" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Bulk Add Students</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          @if(newStudents.length === 0) {
+            <div class="text-center p-5 border-2 border-dashed rounded-3" 
+                 (dragover)="onDragOver($event)" 
+                 (dragleave)="onDragLeave($event)" 
+                 (drop)="onDrop($event)">
+              <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+              <p class="mb-2">Drag & drop your CSV or JSON file here</p>
+              <p class="text-muted mb-3">or</p>
+              <button type="button" class="btn btn-primary" (click)="fileInput.click()">Select File</button>
+            </div>
+          } @else {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Total Students: {{newStudents.length}}</h6>
+              <button type="button" class="btn btn-sm btn-secondary" (click)="resetModal()">Upload Another File</button>
+            </div>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Department</th>
+                  <th>Class ID</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                @for(student of newStudents; track student.id) {
+                  <tr>
+                    <td>{{student.firstName}} {{student.middleName ? student.middleName + ' ' : ''}}{{student.lastName}}</td>
+                    <td>{{student.email}}</td>
+                    <td>{{getDepartmentName(student.details?.departmentId)}}</td>
+                    <td>{{student.details?.classId}}</td>
+  
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          @if(newStudents.length > 0) {
+            <button type="button" class="btn btn-primary" (click)="addStudents()">Add Students</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade show"></div>
+}
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="card-title h3">Manage Students</h2>
+      <div class="d-flex gap-2">
+        <a routerLink="add" class="btn btn-primary btn-sm d-flex align-items-center">
+          <i class="fas fa-plus me-2"></i>Add Student
+        </a>
+        <button (click)="showModal = true" class="btn btn-success btn-sm d-flex align-items-center">
+          <i class="fas fa-upload me-2"></i>Bulk Add
+        </button>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-download me-2"></i>Download Sample
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="downloadSample()">CSV Format</a></li>
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="downloadSampleJson()">JSON Format</a></li>
+          </ul>
+        </div>
+        <input type="file" #fileInput (change)="onFileSelected($event)" class="d-none" accept=".csv,.json">
+      </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+      <div class="col-md-5 col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="departmentFilter"><i class="fas fa-filter"></i></label>
+          <select id="departmentFilter" class="form-select" [(ngModel)]="selectedDepartmentId" (ngModelChange)="applyFilter()">
+            <option value="all">All Departments</option>
+            @for(dept of departments; track dept.id) {
+              <option [value]="dept.id">{{dept.name}}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="col-md-7 col-lg-8">
+        <div class="input-group">
+          <label class="input-group-text" for="searchFilter"><i class="fas fa-search"></i></label>
+          <input type="text" id="searchFilter" class="form-control" placeholder="Search by Student ID, Name, Department, or Class ID" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()">
+        </div>
+      </div>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th class="text-muted small">Name</th>
+            <th class="text-muted small">Student ID</th>
+            <th class="text-muted small">Department</th>
+            <th class="text-muted small">Class ID</th>
+
+            <th class="text-muted small text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-group-divider">
+          @for(student of filteredStudents; track student.id) {
+            <tr>
+              <td class="fw-semibold text-dark">{{student.firstName}} {{student.middleName ? student.middleName + ' ' : ''}}{{student.lastName}}</td>
+              <td class="text-secondary">{{student.id}}</td>
+              <td class="text-secondary">{{getDepartmentName(student.details?.departmentId)}}</td>
+              <td class="text-secondary">{{student.details?.classId}}</td>
+
+              <td class="text-center">
+                <a [routerLink]="['edit', student.id]" class="btn btn-sm btn-outline-primary me-2" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                <button (click)="deleteStudent(student.id)" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+              <tr>
+              <td colspan="6" class="text-center text-muted p-4">
+                There are no students to display for the selected department.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

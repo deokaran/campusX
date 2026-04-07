@@ -1,0 +1,30 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="card-title h3 mb-4">Weekly Time Table</h2>
+    <div class="table-responsive">
+      <table class="table table-bordered text-center">
+        <thead>
+          <tr class="table-danger">
+            <th class="p-3 fw-semibold">Time</th>
+            @for(day of days; track day) {
+              <th class="p-3 fw-semibold">{{day}}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for(row of schedule; track row.time) {
+            <tr>
+              <th class="p-3 fw-medium table-light align-middle">{{row.time}}</th>
+              @for (dayKey of dayKeys; track dayKey) {
+                <td class="p-3 align-middle" [class.table-light]="getSubjectName(row[dayKey]) === 'BREAK'">
+                  {{getSubjectName(row[dayKey])}}
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

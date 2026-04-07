@@ -1,0 +1,58 @@
+
+@if (test) {
+  <div class="card shadow-sm mx-auto" style="max-width: 56rem;">
+    <div class="card-body p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+          <h2 class="card-title h3 mb-1">{{ test.title }}</h2>
+          <p class="text-muted mb-0">Question {{ currentQuestionIndex + 1 }} of {{ test.questions.length }}</p>
+        </div>
+        <div class="h5 fw-bold text-danger">
+          Marks: {{ currentQuestion.marks }}
+        </div>
+      </div>
+
+      <div class="py-4">
+        <p class="h5 fw-medium text-dark mb-4">{{ currentQuestion.text }}</p>
+        <div class="vstack gap-3">
+          @for(option of currentQuestion.options; track $index) {
+            <div class="form-check option-label">
+              <input 
+                class="form-check-input"
+                type="radio" 
+                name="question-{{currentQuestionIndex}}" 
+                [id]="'option' + $index"
+                [value]="option" 
+                [(ngModel)]="answers[currentQuestionIndex]">
+              <label class="form-check-label w-100" [for]="'option' + $index">
+                {{ option }}
+              </label>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+        <button (click)="prevQuestion()" 
+                [disabled]="currentQuestionIndex === 0"
+                class="btn btn-secondary">
+          Previous
+        </button>
+        
+        @if (currentQuestionIndex < test.questions.length - 1) {
+          <button (click)="nextQuestion()" 
+                  class="btn btn-danger">
+            Next
+          </button>
+        } @else {
+          <button (click)="submitTest()"
+                  class="btn btn-success">
+            Submit Test
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <p class="text-center text-muted">Loading test...</p>
+}

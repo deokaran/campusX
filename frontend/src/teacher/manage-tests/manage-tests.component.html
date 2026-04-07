@@ -1,0 +1,97 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="card-title h3 mb-4">Manage Your Tests</h2>
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th class="text-muted small">Test Title</th>
+                <th class="text-muted small">Class</th>
+                <th class="text-muted small text-center">Submissions</th>
+                <th class="text-muted small text-center">Status</th>
+                <th class="text-muted small text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @for(test of myTests; track test.id) {
+            <tr>
+                <td class="fw-semibold text-dark">{{test.title}}</td>
+                <td class="text-secondary">{{ getClassName(test.classId) }}</td>
+                <td class="text-secondary text-center">{{getSubmissionCount(test.id)}}</td>
+                <td class="text-center">
+                    <span class="badge" 
+                          [class.text-bg-warning]="test.status === 'Draft'"
+                          [class.text-bg-success]="test.status === 'Published'"
+                          [class.text-bg-danger]="test.status === 'Closed'">
+                        {{test.status}}
+                    </span>
+                    @if(test.resultsPublished) {
+                      <span class="badge text-bg-info ms-1">Results Out</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <div class="btn-group">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-container="body" aria-expanded="false">
+                        Manage
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        @if(test.status !== 'Draft') {
+                          <li><a class="dropdown-item" [routerLink]="[test.id, 'submissions']"><i class="fas fa-list-ol me-2 text-muted"></i>View Submissions</a></li>
+                        }
+                        @if(test.status === 'Draft') {
+                          <li><button class="dropdown-item" (click)="publishTest(test)"><i class="fas fa-paper-plane me-2 text-muted"></i>Publish</button></li>
+                        }
+                        @if(test.status === 'Published') {
+                          <li><button class="dropdown-item" (click)="closeTest(test)"><i class="fas fa-stop-circle me-2 text-muted"></i>Close</button></li>
+                        }
+                        @if(test.status === 'Closed' && !test.resultsPublished) {
+                          <li><button class="dropdown-item" (click)="resumeTest(test)"><i class="fas fa-play-circle me-2 text-muted"></i>Resume</button></li>
+                        }
+                        @if((test.status === 'Published' || test.status === 'Closed') && !test.resultsPublished) {
+                          <li><button class="dropdown-item" (click)="revealResults(test)"><i class="fas fa-eye me-2 text-muted"></i>Reveal Results</button></li>
+                        }
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button class="dropdown-item text-danger" 
+                                    (click)="selectTestForDeletion(test)" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteConfirmationModal">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </li>
+                      </ul>
+                    </div>
+                </td>
+            </tr>
+            } @empty {
+                <tr>
+                    <td colspan="5" class="text-center text-muted p-5">You have not created any tests yet.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    @if(testToDelete) {
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteModalLabel">Confirm Deletion</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to permanently delete the test:</p>
+          <p class="fw-bold text-center">{{ testToDelete.title }}?</p>
+          <p class="text-danger small"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone and will delete all student submissions for this test.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()" data-bs-dismiss="modal">Delete Test</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

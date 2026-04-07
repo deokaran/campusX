@@ -1,0 +1,125 @@
+
+@if(classData) {
+  <div class="vstack gap-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h2 class="h3 fw-bold text-dark mb-0">{{ classData.name }}</h2>
+      <div class="d-flex gap-2">
+        <a [routerLink]="['performance']" class="btn btn-warning btn-sm d-flex align-items-center">
+            <i class="fas fa-chart-line me-2"></i>Class Performance
+        </a>
+        <a routerLink="/teacher/my-classes" class="btn btn-secondary btn-sm d-flex align-items-center">
+           <i class="fas fa-arrow-left me-2"></i>Back to My Classes
+        </a>
+      </div>
+    </div>
+
+    <!-- Subjects List -->
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title h5 mb-4">Subjects</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+            @for(subject of classData.subjects; track subject.code) {
+                <div class="col">
+                    <div class="p-3 border border-warning-subtle bg-warning-subtle rounded-3">
+                    <p class="fw-bold text-warning-emphasis mb-0">{{subject.name}}</p>
+                    <p class="small text-muted mb-0">Teacher: {{ getTeacherName(subject.teacherId) }}</p>
+                </div>
+                </div>
+            } @empty {
+                <p class="text-muted small">No subjects are assigned to this class yet.</p>
+            }
+        </div>
+      </div>
+    </div>
+
+    <!-- Time Table -->
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title h5 mb-4">Weekly Time Table</h3>
+        @if(classData.timeTable && classData.timeTable.length > 0) {
+          <div class="table-responsive">
+            <table class="table table-bordered text-center align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="p-3 fw-semibold">Time</th>
+                  @for(day of days; track day) {
+                    <th class="p-3 fw-semibold">{{day}}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for(row of classData.timeTable; track row.time) {
+                  <tr>
+                    <td class="fw-medium text-muted bg-light">{{row.time}}</td>
+                    @for(dayKey of dayKeys; track dayKey) {
+                      <td [class.bg-light]="getSubjectName(row[dayKey]) === 'BREAK'" 
+                          [class.text-muted]="getSubjectName(row[dayKey]) === 'BREAK'">
+                        {{ getSubjectName(row[dayKey]) || '-' }}
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="text-muted small mb-0">No timetable available for this class.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card shadow-sm">
+       <div class="card-body p-4">
+        <h3 class="card-title h5 mb-4">Enrolled Students ({{ students.length }})</h3>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-muted small text-center">Roll No.</th>
+                        <th class="text-muted small">Name</th>
+                        <th class="text-muted small">Student ID</th>
+                        <th class="text-muted small">Fee Status</th>
+                        <th class="text-muted small">Attendance</th>
+                        <th class="text-muted small text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(student of students; track student.id) {
+                    <tr>
+                        <td class="fw-bold text-dark text-center">{{ student.details?.rollNo }}</td>
+                        <td class="fw-semibold text-dark">{{student.firstName}} {{student.lastName}}</td>
+                        <td class="text-secondary">{{student.id}}</td>
+                        <td>
+                          <span class="badge"
+                            [class.text-bg-success]="getFeeStatus(student) === 'Paid'"
+                            [class.text-bg-warning]="getFeeStatus(student) === 'Pending'">
+                            {{ getFeeStatus(student) }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="badge text-bg-info">N/A</span>
+                        </td>
+                        <td class="text-center">
+                            <a [routerLink]="['/teacher/student-results', student.id]" class="btn btn-sm btn-outline-primary me-2" title="View Results">
+                                <i class="fas fa-graduation-cap"></i>
+                            </a>
+                            <a [routerLink]="['/teacher/my-classes', classData.id, 'edit-student', student.id]" class="btn btn-sm btn-outline-warning" title="Edit Student">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted p-4">No students are enrolled in this class.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+    <p class="text-center text-muted">Loading class details...</p>
+}

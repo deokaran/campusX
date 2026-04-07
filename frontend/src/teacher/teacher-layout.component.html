@@ -1,0 +1,8 @@
+<app-header [pageTitle]="pageTitle$ | async" [themeColor]="'amber'">
+</app-header>
+<div class="d-flex">
+  <app-sidebar [isExpanded]="isSidebarExpanded" [menuItems]="menuItems" [themeColor]="'amber'" [roleName]="'Teacher'"></app-sidebar>
+  <main class="flex-grow-1 p-4">
+    <router-outlet></router-outlet>
+  </main>
+</div>

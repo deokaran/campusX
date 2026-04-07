@@ -1,0 +1,211 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="card-title h3 mb-0">Manage Student Results</h2>
+      <div class="d-flex gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-download me-2"></i>Download Sample
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="downloadSampleCsv()">CSV Format</a></li>
+            <li><a class="dropdown-item" href="javascript:void(0)" (click)="downloadSampleJson()">JSON Format</a></li>
+          </ul>
+        </div>
+        <input type="file" #fileInput (change)="handleFileUpload($event)" style="display: none;" accept=".csv, .json">
+        <button class="btn btn-primary" (click)="fileInput.click()">
+          <i class="fas fa-file-upload me-2"></i>Bulk Add Results
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4" style="min-height: calc(100vh - 14rem);">
+      <!-- Student List -->
+      <div class="col-lg-4 d-flex flex-column">
+        <h3 class="h5 text-dark mb-2">1. Select a Student</h3>
+        <input 
+          type="text" 
+          placeholder="Search by name or ID..."
+          [(ngModel)]="searchTerm"
+          (input)="filterStudents()"
+          class="form-control mb-3">
+        <div class="list-group flex-grow-1" style="max-height: calc(100vh - 20rem); overflow-y: auto;">
+          @for(student of filteredStudents; track student.id) {
+            <button type="button" (click)="selectStudent(student)"
+                class="list-group-item list-group-item-action"
+                [class.active]="selectedStudent?.id === student.id">
+              <p class="fw-semibold mb-0">{{student.firstName}} {{student.lastName}}</p>
+              <p class="small text-muted mb-0">{{student.id}}</p>
+            </button>
+          } @empty {
+            <div class="list-group-item text-center text-muted">No students found.</div>
+          }
+        </div>
+      </div>
+
+      <!-- Semester & Result Details -->
+      <div class="col-lg-8 d-flex flex-column" style="position: sticky; top: 1rem;">
+        @if (selectedStudent) {
+          <div class="d-flex flex-column flex-grow-1">
+            
+            <!-- Default View: Select Semester or Add New -->
+            @if (!editableResult && !isAddingResult) {
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="h5 text-dark mb-0">Results for <span class="fw-bold text-primary">{{ selectedStudent.firstName }} {{ selectedStudent.lastName }}</span></h3>
+                <div>
+                  <button (click)="openAddResultForm()" class="btn btn-sm btn-primary"><i class="fas fa-plus me-2"></i>Add New Result</button>
+                  <button (click)="clearStudentSelection()" class="btn-close ms-2" aria-label="Clear Selection"></button>
+                </div>
+              </div>
+              <h4 class="h6 fw-normal text-muted">Select a semester to view or edit.</h4>
+              <div class="row row-cols-2 row-cols-md-4 g-3">
+                @for(result of studentResults; track result.semester) {
+                  <div class="col">
+                    <button (click)="selectSemester(result)" class="btn btn-outline-primary w-100 h-100 p-3">
+                      Semester {{ result.semester }}
+                    </button>
+                  </div>
+                } @empty {
+                  <div class="col-12">
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded-3 p-5">
+                      <p class="text-muted">No results found for this student.</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Edit View -->
+            @if (editableResult) {
+              <div class="d-flex flex-column flex-grow-1">
+                <h3 class="h5 text-dark mb-3">3. Edit Marks for Semester {{ editableResult.semester }}</h3>
+                <div class="table-responsive flex-grow-1">
+                  <table class="table table-bordered table-sm small">
+                      <thead class="table-light align-middle text-center">
+                          <tr>
+                              <th rowspan="2" class="p-2">Paper</th>
+                              <th colspan="2" class="p-2">Internal</th>
+                              <th colspan="2" class="p-2">External</th>
+                              <th colspan="2" class="p-2">Total</th>
+                              <th rowspan="2" class="p-2">Grade</th>
+                          </tr>
+                          <tr>
+                              <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                              <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                              <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                          </tr>
+                      </thead>
+                      <tbody class="align-middle">
+                          @for(subject of editableResult.subjects; track subject.srNo) {
+                              <tr>
+                                  <td class="fw-medium text-dark">{{subject.paper}}</td>
+                                  <td style="width: 70px;"><input type="number" [(ngModel)]="subject.internal" (input)="recalculateTotal(subject)" [disabled]="subject.internalMax === 0" class="form-control form-control-sm text-center"></td>
+                                  <td class="text-center table-light">{{subject.internalMax > 0 ? subject.internalMax : '--'}}</td>
+                                  <td style="width: 70px;"><input type="number" [(ngModel)]="subject.external" (input)="recalculateTotal(subject)" class="form-control form-control-sm text-center"></td>
+                                  <td class="text-center table-light">{{subject.externalMax}}</td>
+                                  <td class="text-center fw-bold table-light">{{subject.total}}</td>
+                                  <td class="text-center table-light">{{subject.totalMax}}</td>
+                                  <td style="width: 70px;"><input type="text" [(ngModel)]="subject.grade" class="form-control form-control-sm text-center fw-bold text-primary bg-primary-subtle border-primary-subtle" readonly></td>
+                              </tr>
+                          }
+                      </tbody>
+                  </table>
+                </div>
+                <div class="d-flex justify-content-end gap-3 pt-3 mt-auto">
+                    <button (click)="cancelEdit()" class="btn btn-secondary">Cancel</button>
+                    <button (click)="saveResult()" class="btn btn-success d-flex align-items-center">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+              </div>
+            }
+
+            <!-- Add New Result View -->
+            @if (isAddingResult && newResult) {
+              <div class="d-flex flex-column flex-grow-1">
+                <h3 class="h5 text-dark mb-3">Add New Result</h3>
+                <form #newResultForm="ngForm" (ngSubmit)="saveNewResult()" class="vstack gap-3 flex-grow-1 d-flex flex-column">
+                  <div class="row g-3 small">
+                    <div class="col-md-3">
+                      <label class="form-label">Semester</label>
+                      <select [(ngModel)]="newResult.semester" (ngModelChange)="onNewSemesterInput()" name="semester" class="form-select" required>
+                        <option [ngValue]="null" disabled>Choose semester...</option>
+                        @for(sem of availableSemesters; track sem) {
+                          <option [ngValue]="sem">Semester {{ sem }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">PRN</label>
+                      <input type="text" [(ngModel)]="newResult.prn" name="prn" class="form-control bg-light" required readonly>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Seat No.</label>
+                      <input type="text" [(ngModel)]="newResult.seatNo" name="seatNo" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Exam Month/Year</label>
+                      <input type="text" [(ngModel)]="newResult.examMonthYear" placeholder="e.g. OCTOBER-2024" name="examMonthYear" class="form-control" required>
+                    </div>
+                  </div>
+                  
+                  @if (semesterExistsError) {
+                    <div class="alert alert-danger small p-2 mt-2">{{ semesterExistsError }}</div>
+                  }
+
+                  @if (newResult.subjects.length > 0) {
+                    <div class="table-responsive flex-grow-1">
+                      <table class="table table-bordered table-sm small">
+                        <thead class="table-light align-middle text-center">
+                            <tr>
+                                <th rowspan="2" class="p-2">Paper</th>
+                                <th colspan="2" class="p-2">Internal</th>
+                                <th colspan="2" class="p-2">External</th>
+                                <th colspan="2" class="p-2">Total</th>
+                                <th rowspan="2" class="p-2">Grade</th>
+                            </tr>
+                            <tr>
+                                <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                                <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                                <th class="p-1">Marks</th><th class="p-1">Out Of</th>
+                            </tr>
+                        </thead>
+                        <tbody class="align-middle">
+                            @for(subject of newResult.subjects; track subject.srNo) {
+                                <tr>
+                                    <td class="fw-medium text-dark">{{subject.paper}}</td>
+                                    <td style="width: 70px;"><input type="number" [(ngModel)]="subject.internal" (input)="recalculateTotal(subject)" name="internal{{subject.srNo}}" [disabled]="subject.internalMax === 0" class="form-control form-control-sm text-center"></td>
+                                    <td class="text-center table-light">{{subject.internalMax > 0 ? subject.internalMax : '--'}}</td>
+                                    <td style="width: 70px;"><input type="number" [(ngModel)]="subject.external" (input)="recalculateTotal(subject)" name="external{{subject.srNo}}" class="form-control form-control-sm text-center"></td>
+                                    <td class="text-center table-light">{{subject.externalMax}}</td>
+                                    <td class="text-center fw-bold table-light">{{subject.total}}</td>
+                                    <td class="text-center table-light">{{subject.totalMax}}</td>
+                                    <td style="width: 70px;"><input type="text" [(ngModel)]="subject.grade" name="grade{{subject.srNo}}" class="form-control form-control-sm text-center fw-bold text-primary bg-primary-subtle border-primary-subtle" readonly></td>
+                                </tr>
+                            }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+
+                  <div class="d-flex justify-content-end gap-3 pt-3 mt-auto">
+                    <button type="button" (click)="cancelAddResult()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" [disabled]="!newResultForm.valid || newResult.subjects.length === 0" class="btn btn-success d-flex align-items-center">
+                        <i class="fas fa-save me-2"></i>Save New Result
+                    </button>
+                  </div>
+                </form>
+              </div>
+            }
+
+          </div>
+        } @else {
+          <div class="d-flex align-items-center justify-content-center h-100 bg-light rounded-3">
+            <p class="text-muted">Select a student from the list to begin.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

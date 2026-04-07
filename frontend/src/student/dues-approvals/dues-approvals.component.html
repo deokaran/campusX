@@ -1,0 +1,143 @@
+
+<div class="vstack gap-5">
+  <!-- Fees Section -->
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h2 class="card-title h3 mb-4">Fee Summary</h2>
+      @if(student) {
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+          <div class="col">
+            <div class="p-3 bg-info-subtle border border-info-subtle rounded-3 text-center">
+              <p class="small fw-medium text-info-emphasis">Total Annual Fees</p>
+              <p class="h4 fw-bold text-info-emphasis">₹{{ student.details.fees.total.toLocaleString() }}</p>
+            </div>
+          </div>
+          <div class="col">
+            <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 text-center">
+              <p class="small fw-medium text-success-emphasis">Total Fees Paid</p>
+              <p class="h4 fw-bold text-success-emphasis">₹{{ student.details.fees.paid.toLocaleString() }}</p>
+            </div>
+          </div>
+          <div class="col">
+            @if (student.details.fees.due > 0) {
+              <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3 text-center">
+                <p class="small fw-medium text-danger-emphasis">Outstanding Dues</p>
+                <p class="h4 fw-bold text-danger-emphasis">₹{{ student.details.fees.due.toLocaleString() }}</p>
+              </div>
+            } @else {
+              <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 text-center">
+                <p class="small fw-medium text-success-emphasis">Dues Cleared</p>
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <i class="fas fa-check-circle h4 text-success-emphasis mb-0"></i>
+                    <p class="h4 fw-bold text-success-emphasis mb-0">₹0</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <h3 class="h5 text-dark mb-3">Payment History</h3>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th class="text-muted small">Receipt No.</th>
+              <th class="text-muted small">Date</th>
+              <th class="text-muted small text-end">Amount</th>
+              <th class="text-muted small text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(receipt of receipts; track receipt.receiptNumber) {
+              <tr>
+                <td class="fw-medium text-dark">{{ receipt.receiptNumber }}</td>
+                <td class="text-secondary">{{ receipt.date | date:'longDate' }}</td>
+                <td class="text-dark fw-semibold text-end">₹{{ receipt.total.toLocaleString() }}</td>
+                <td class="text-center">
+                  <button (click)="viewReceipt(receipt)" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                    <i class="fas fa-eye me-1"></i> View/Download
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="text-center text-muted p-4">No payment receipts found.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    @if(selectedReceipt) {
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="receiptModalLabel">Fee Receipt: {{selectedReceipt.receiptNumber}}</h1>
+          <div>
+            <button (click)="downloadReceipt()" class="btn btn-danger btn-sm me-2"><i class="fas fa-download me-2"></i>Download PDF</button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body p-0">
+          <div id="receipt-content" class="p-5 font-serif">
+              <!-- Header -->
+              <div class="d-flex align-items-center justify-content-between border-bottom border-2 border-dark pb-2 text-dark">
+                  <img src="https://drive.google.com/thumbnail?id=1sVspvXTbkAnQuaTZ1xLZNxbP1eaRqoz_&sz=w1000" alt="College Logo" style="width: 80px; height: 80px;">
+                  <div class="text-center">
+                      <p class="small">Shiromani Gurudwara Parbandhak Committe's</p>
+                      <h1 class="h5 fw-bold">GURU NANAK KHALSA COLLEGE OF ARTS, SCIENCE & COMMERCE (AUTONOMOUS)</h1>
+                      <p class="small">Nathalal Parekh Marg, Matunga East, Mumbai, Maharashtra 400019</p>
+                  </div>
+              </div>
+              <!-- Details -->
+              <div class="row small g-2 mt-3 text-dark">
+                  <div class="col-4"><strong>Invoice Number:</strong> {{selectedReceipt.invoiceNumber}}</div>
+                  <div class="col-4"><strong>Receipt Number:</strong> {{selectedReceipt.receiptNumber}}</div>
+                  <div class="col-4"><strong>Academic Year:</strong> {{selectedReceipt.academicYear}}</div>
+                  <div class="col-4"><strong>Class:</strong> {{selectedReceipt.class}}</div>
+                  <div class="col-4"><strong>Name:</strong> {{selectedReceipt.name}}</div>
+                  <div class="col-4"><strong>Date:</strong> {{selectedReceipt.date | date:'fullDate'}}</div>
+                  <div class="col-4"><strong>Payment Mode:</strong> {{selectedReceipt.paymentMode}}</div>
+              </div>
+              <!-- Items Table -->
+              <table class="table table-sm table-bordered border-dark mt-4 small text-dark">
+                  <thead>
+                      <tr class="border-dark">
+                          <th class="p-2 fw-bold border-dark">Received The Following</th>
+                          <th class="p-2 text-end fw-bold border-dark">Amount (Rs)</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      @for(item of selectedReceipt.items; track item.description) {
+                      <tr>
+                          <td class="p-1 ps-2">{{item.description}}</td>
+                          <td class="p-1 pe-2 text-end">{{item.amount.toLocaleString()}}</td>
+                      </tr>
+                      }
+                  </tbody>
+              </table>
+              <!-- Totals -->
+              <div class="d-flex justify-content-end mt-2 small text-dark">
+                  <div class="w-50">
+                      <div class="d-flex justify-content-between p-1 border-bottom border-dark">
+                          <strong class="fw-bold">TOTAL</strong>
+                          <strong class="fw-bold">{{selectedReceipt.total.toLocaleString()}}</strong>
+                      </div>
+                      <div class="d-flex justify-content-between p-1">
+                          <strong class="fw-bold">TOTAL IN WORDS</strong>
+                          <span class="text-end">{{selectedReceipt.totalInWords}}</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

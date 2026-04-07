@@ -1,0 +1,46 @@
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+}
+
+.signature-img {
+  max-height: 80px;
+  max-width: 100%;
+}
+
+.profile-picture-group {
+  .edit-icon {
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    border: 2px solid white;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: var(--bs-primary-dark, #0b5ed7);
+    }
+  }
+}
+
+.upload-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Ensure form controls in edit mode have a consistent look
+.form-control[disabled],
+.form-control[readonly] {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

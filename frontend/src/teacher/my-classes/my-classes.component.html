@@ -1,0 +1,25 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="card-title h3 mb-4">My Classes</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+      @for(c of myClasses; track c.id) {
+        <div class="col">
+          <a [routerLink]="[c.id]" class="card h-100 class-card shadow-sm text-decoration-none">
+            <div class="card-body">
+              <h3 class="card-title h5 text-warning-emphasis">{{c.name}}</h3>
+              <p class="card-text small text-dark mt-2">Students: {{c.studentIds.length}}</p>
+            </div>
+            <div class="card-footer d-flex justify-content-end align-items-center">
+              <small class="fw-semibold text-warning-emphasis">View Details <i class="fas fa-arrow-right ms-1"></i></small>
+            </div>
+          </a>
+        </div>
+      } @empty {
+        <div class="col-12">
+          <p class="text-center text-muted p-4">You are not assigned to any classes.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

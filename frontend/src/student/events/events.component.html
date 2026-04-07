@@ -1,0 +1,35 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="card-title h3 mb-4">Notices & Announcements</h2>
+    <div class="list-group list-group-flush">
+       @if(notices$ | async; as notices) {
+        @for(notice of notices; track notice.title) {
+          <div class="list-group-item d-flex align-items-start gap-4 p-3">
+            <div class="flex-shrink-0 text-center text-white bg-warning rounded-3 p-2" style="width: 5.5rem;">
+              <p class="h3 fw-bold mb-0">{{ notice.date | date:'dd' }}</p>
+              <p class="small mb-0">{{ notice.date | date:'MMM, yyyy' }}</p>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="h6 fw-bold text-dark mb-0">{{ notice.title }}</h3>
+                <span class="badge small"
+                      [class.text-bg-primary]="notice.category === 'Academic'"
+                      [class.text-bg-secondary]="notice.category === 'Administrative'"
+                      [class.text-bg-warning]="notice.category === 'Event'"
+                      [class.text-bg-light]="notice.category === 'Other'">
+                      {{ notice.category }}
+                </span>
+              </div>
+              @if(notice.content) {
+                <p class="text-muted small mt-1 mb-0">{{ notice.content }}</p>
+              }
+            </div>
+          </div>
+        } @empty {
+          <p class="text-center text-muted p-4">No notices have been posted yet.</p>
+        }
+       }
+    </div>
+  </div>
+</div>

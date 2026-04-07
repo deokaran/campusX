@@ -1,0 +1,30 @@
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="card-title h3 mb-4">Your Subjects for this Semester</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <thead class="table-danger">
+            <tr>
+              <th>Subject Name</th>
+              <th>Teacher Name</th>
+              <th>Credit Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(subject of subjects; track subject.code) {
+              <tr>
+                <td>({{subject.code}}) {{subject.name}}</td>
+                <td>{{ getTeacherName(subject.teacherId) }}</td>
+                <td>{{subject.credits}}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="text-center text-muted p-4">No subjects assigned to your class yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+  </div>
+</div>

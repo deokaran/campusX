@@ -1,0 +1,27 @@
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.bar-animation {
+  transform-origin: bottom;
+  animation: grow 0.5s ease-out forwards;
+}
+
+@keyframes donut-segment-fill {
+  to {
+    stroke-dasharray: var(--final-dasharray);
+  }
+}
+
+.donut-segment-animation {
+  animation: donut-segment-fill 1s 0.2s ease-out forwards;
+}
+
+.bar-wrapper {
+    position: relative;
+}

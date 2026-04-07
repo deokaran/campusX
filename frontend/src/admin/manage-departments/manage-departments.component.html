@@ -1,0 +1,92 @@
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 mb-0">Manage Departments</h2>
+    <button class="btn btn-primary d-flex align-items-center gap-2" (click)="openAddModal()">
+      <i class="fas fa-plus"></i> Add Department
+    </button>
+  </div>
+
+  <div class="row g-4">
+    @for(dept of departments; track dept.id || dept._id) {
+      <div class="col-md-6 col-lg-4 col-xl-3">
+        <div class="card h-100 shadow-sm department-card">
+          <div class="card-body text-center p-4">
+            <div class="avatar-circle mb-3 mx-auto bg-primary-subtle text-primary">
+              <span class="fs-4 fw-bold">{{ dept.code }}</span>
+            </div>
+            <h5 class="card-title mb-2">{{ dept.name }}</h5>
+            <p class="text-muted small mb-2">Code: {{ dept.code }}</p>
+            @if (dept.description) {
+              <p class="text-muted small mb-2">{{ dept.description }}</p>
+            }
+            @if (dept.headOfDepartment) {
+              <p class="text-muted small mb-0"><strong>HOD:</strong> {{ dept.headOfDepartment }}</p>
+            }
+          </div>
+          <div class="card-footer bg-white border-top-0 text-center pb-3">
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" (click)="viewDepartment(dept.id || dept._id)">
+                <i class="fas fa-eye me-1"></i>View
+              </button>
+              <button class="btn btn-outline-danger" (click)="deleteDepartment(dept.id || dept._id); $event.stopPropagation()">
+                <i class="fas fa-trash me-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <div class="col-12">
+        <div class="alert alert-info text-center">
+          <i class="fas fa-info-circle me-2"></i>
+          No departments found. Click "Add Department" to create one.
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Add Department Modal -->
+@if (showAddModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Department</h5>
+          <button type="button" class="btn-close" (click)="closeAddModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form #deptForm="ngForm">
+            <div class="mb-3">
+              <label for="deptId" class="form-label">Department ID</label>
+              <input type="text" class="form-control" id="deptId" [(ngModel)]="newDepartment._id" name="_id" readonly>
+              <small class="form-text text-muted">Auto-generated</small>
+            </div>
+            <div class="mb-3">
+              <label for="deptName" class="form-label">Department Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="deptName" [(ngModel)]="newDepartment.name" name="name" required placeholder="e.g. Computer Science">
+            </div>
+            <div class="mb-3">
+              <label for="deptCode" class="form-label">Department Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="deptCode" [(ngModel)]="newDepartment.code" name="code" required placeholder="e.g. CS">
+            </div>
+            <div class="mb-3">
+              <label for="deptDesc" class="form-label">Description</label>
+              <textarea class="form-control" id="deptDesc" [(ngModel)]="newDepartment.description" name="description" rows="3" placeholder="Brief description of the department"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="deptHod" class="form-label">Head of Department</label>
+              <input type="text" class="form-control" id="deptHod" [(ngModel)]="newDepartment.headOfDepartment" name="headOfDepartment" placeholder="e.g. Dr. John Smith">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="addDepartment()" [disabled]="!newDepartment.name || !newDepartment.code">
+            <i class="fas fa-save me-2"></i>Add Department
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

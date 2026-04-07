@@ -1,0 +1,20 @@
+
+.chat-container {
+    // Subtract header height (4rem) and padding (2rem top/bottom)
+    height: calc(100vh - 8rem); 
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-body {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.chat-bubble {
+    max-width: 75%;
+}
+
+.chat-meta {
+    opacity: 0.8;
+}
