@@ -1,6 +1,7 @@
 export interface Notice {
+  _id?: string; // MongoDB ID from backend
   date: string; // YYYY-MM-DD
   title: string;
   category: 'Administrative' | 'Academic' | 'Event' | 'Other';
-  content?: string; // Optional detailed content
+  description: string; // Notice description/content
 }

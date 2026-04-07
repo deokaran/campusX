@@ -92,8 +92,11 @@
                     <p class="h5 fw-bold text-danger mb-0">{{ notice.date | date:'dd' }}</p>
                     <p class="small text-muted mb-0">{{ notice.date | date:'MMM' }}</p>
                   </div>
-                  <div class="flex-grow-1">
-                    <p class="fw-medium text-dark mb-0">{{ notice.title }}</p>
+                  <div class="flex-grow-2 ">
+                    <p class="fw-bold text-dark mb-0" style="text-transform: uppercase;">{{ notice.title }}</p>
+                  </div>
+                   <div class="flex-grow-1 ms-5">
+                    <p class="fw-medium text-dark mb-0"  style="text-transform: capitalize;">{{ notice.description}}</p>
                   </div>
                   <div>
                     <span class="badge"

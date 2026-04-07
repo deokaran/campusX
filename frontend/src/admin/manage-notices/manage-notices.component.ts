@@ -46,7 +46,7 @@ export class ManageNoticesComponent implements OnInit {
   resetCurrentNotice(): Notice {
     const today = new Date();
     const formattedDate = formatDate(today, 'yyyy-MM-dd', 'en-US');
-    return { date: formattedDate, title: '', category: 'Academic' };
+    return { date: formattedDate, title: '', category: 'Academic', description: '' };
   }
 
   openAddModal() {

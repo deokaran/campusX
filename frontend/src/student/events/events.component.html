@@ -12,7 +12,9 @@
             </div>
             <div class="flex-grow-1">
               <div class="d-flex justify-content-between align-items-center">
-                <h3 class="h6 fw-bold text-dark mb-0">{{ notice.title }}</h3>
+                <h2 class="h2 fw-bold text-dark mb-0"  style="text-transform: capitalize;">{{ notice.title }}</h2>
+                   
+                <h3 class="h4 fw-bold text-dark mb-0"  style="text-transform: capitalize;">{{ notice.description }}</h3>
                 <span class="badge small"
                       [class.text-bg-primary]="notice.category === 'Academic'"
                       [class.text-bg-secondary]="notice.category === 'Administrative'"

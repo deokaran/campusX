@@ -79,6 +79,10 @@
               <option>Other</option>
             </select>
           </div>
+          <div>
+            <label for="noticeDescription" class="form-label">Description</label>
+            <textarea id="noticeDescription" name="noticeDescription" [(ngModel)]="currentNotice.description" required class="form-control" rows="4" placeholder="Enter notice details..."></textarea>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="closeModal()">Cancel</button>
