@@ -29,6 +29,10 @@ export class ClassService {
 
   private normalizeClass(classData: ClassData): ClassData {
     const normalizedId = (classData._id || classData.id || classData.classId || '').trim();
+    const subjectTeacherIds = (classData.subjects || [])
+      .map((subject: any) => typeof subject?.teacherId === 'string' ? subject.teacherId.trim() : '')
+      .filter(Boolean);
+    const teacherIds = [...new Set([...(classData.teacherIds || []), ...subjectTeacherIds])];
 
     return {
       ...classData,
@@ -36,7 +40,7 @@ export class ClassService {
       id: normalizedId,
       _id: normalizedId,
       customClassId: classData.customClassId || '',
-      teacherIds: classData.teacherIds || [],
+      teacherIds,
       studentIds: classData.studentIds || [],
       subjects: classData.subjects || [],
       timeTable: classData.timeTable || []
@@ -60,6 +64,16 @@ export class ClassService {
 
   getClassById(classId: string): ClassData | undefined {
     return this.getClasses().find(c => (c.classId || c.id || c._id) === classId);
+  }
+
+  isTeacherAssignedToClass(classData: ClassData, teacherId: string): boolean {
+    const normalizedTeacherId = teacherId.trim();
+    const subjectTeacherIds = (classData.subjects || [])
+      .map((subject: any) => typeof subject?.teacherId === 'string' ? subject.teacherId.trim() : '')
+      .filter(Boolean);
+    const classTeacherIds = classData.teacherIds || [];
+
+    return [...classTeacherIds, ...subjectTeacherIds].includes(normalizedTeacherId);
   }
 
   addClass(classData: ClassData): Observable<ClassData> {

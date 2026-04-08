@@ -161,8 +161,9 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="closeModal()">Cancel</button>
-          <button type="submit" [disabled]="!receiptForm.form.valid || calculateTotal() <= 0" class="btn btn-primary"
-            data-bs-dismiss="modal">Save Receipt</button>
+          <button type="submit" [disabled]="!receiptForm.form.valid || calculateTotal() <= 0" class="btn btn-primary">
+            Save Receipt
+          </button>
         </div>
       </form>
       }

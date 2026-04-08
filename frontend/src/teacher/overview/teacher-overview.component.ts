@@ -39,7 +39,7 @@ export class TeacherOverviewComponent implements OnInit {
   ngOnInit(): void {
     const teacherId = this.authService.currentUserValue?.id;
     if (teacherId) {
-      const myClasses = this.classService.getClasses().filter(c => c.teacherIds.includes(teacherId));
+      const myClasses = this.classService.getClasses().filter(c => this.classService.isTeacherAssignedToClass(c, teacherId));
       this.classCount = myClasses.length;
       this.studentCount = myClasses.reduce((acc, curr) => acc + curr.studentIds.length, 0);
 

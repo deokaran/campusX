@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { FeeService, FeeReceipt, FeeItem } from '../../services/fee.service';
+import { ClassService } from '../../services/class.service';
 import { User } from '../../models/user';
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 export class ManageFeesComponent implements OnInit {
   userService = inject(UserService);
   feeService = inject(FeeService);
+  classService = inject(ClassService);
   cdr = inject(ChangeDetectorRef);
 
   students: User[] = [];
@@ -68,10 +70,11 @@ export class ManageFeesComponent implements OnInit {
   }
   
   resetNewReceipt() {
+     const classLabel = this.getStudentClassLabel(this.selectedStudent);
      this.newReceipt = {
       invoiceNumber: 'GNKDC' + Math.floor(Math.random() * 90000 + 10000),
       receiptNumber: 'SU-' + Math.floor(Math.random() * 900 + 100),
-      class: this.selectedStudent?.details.yearSem,
+      class: classLabel,
       academicYear: '2024-2025',
       date: this.today,
       paymentMode: 'Offline',
@@ -94,6 +97,14 @@ export class ManageFeesComponent implements OnInit {
   saveReceipt() {
     this.error = '';
     if (this.selectedStudent) {
+      const classLabel = this.getStudentClassLabel(this.selectedStudent);
+
+      if (!classLabel) {
+        this.error = 'This student is not assigned to a class yet. Please assign a class before creating a receipt.';
+        this.cdr.markForCheck();
+        return;
+      }
+
       const currentPaid = this.selectedStudent.details.fees.paid;
       const totalFees = this.selectedStudent.details.fees.total;
       const newPayment = this.calculateTotal();
@@ -104,31 +115,70 @@ export class ManageFeesComponent implements OnInit {
         return;
       }
       
-      // Fixed: Add studentId to receipt object and pass single parameter
-      const receiptData = {
-        ...this.newReceipt,
+      // Create receipt object with all required fields
+      const receiptData: Partial<FeeReceipt> = {
         studentId: this.selectedStudent.id,
+        invoiceNumber: this.newReceipt.invoiceNumber,
+        receiptNumber: this.newReceipt.receiptNumber,
+        class: classLabel,
         name: `${this.selectedStudent.firstName} ${this.selectedStudent.lastName}`.toUpperCase(),
+        academicYear: this.newReceipt.academicYear,
+        date: this.newReceipt.date,
+        paymentMode: this.newReceipt.paymentMode,
+        items: this.newReceipt.items,
         total: this.calculateTotal(),
         totalInWords: this.numberToWords(this.calculateTotal())
       };
       
-      this.feeService.addReceipt(receiptData);
-      
-      // Refresh data after short delay
-      setTimeout(() => {
-        if (this.selectedStudent) {
-          this.selectStudent(this.selectedStudent);
+      // Subscribe to the Observable
+      this.feeService.addReceipt(receiptData).subscribe({
+        next: (savedReceipt) => {
+          console.log('Receipt saved successfully:', savedReceipt);
+          if (!this.selectedStudent) {
+            this.closeModal();
+            return;
+          }
+
+          this.userService.fetchUserById(this.selectedStudent.id).subscribe({
+            next: (freshStudent) => {
+              this.selectedStudent = freshStudent;
+              this.students = this.userService.getStudents();
+              this.filterStudents();
+              this.studentReceipts = this.feeService.getReceiptsForStudent(freshStudent.id);
+              this.closeModal();
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.studentReceipts = this.feeService.getReceiptsForStudent(this.selectedStudent!.id);
+              this.closeModal();
+              this.cdr.markForCheck();
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error saving receipt:', error);
+          this.error = error.error?.message || 'Failed to save receipt. Please try again.';
+          this.cdr.markForCheck();
         }
-      }, 200);
-      
-      this.closeModal();
+      });
     }
   }
 
   private numberToWords(num: number): string {
     // Simplified version
     return `${num} Rupees`;
+  }
+
+  private getStudentClassLabel(student: User | null): string {
+    const classId = student?.details?.classId?.trim();
+    const yearSem = student?.details?.yearSem?.trim();
+
+    if (classId) {
+      const classData = this.classService.getClassById(classId);
+      return classData?.classId || classData?.id || classData?._id || classId;
+    }
+
+    return yearSem || '';
   }
 
   // Bulk Upload Logic
@@ -178,16 +228,55 @@ export class ManageFeesComponent implements OnInit {
 
     let successCount = 0;
     let errorCount = 0;
+    const errors: string[] = [];
 
-    this.parsedData.forEach((record: any) => {
+    // Process receipts sequentially to avoid race conditions
+    const processReceipt = (index: number) => {
+      if (index >= this.parsedData.length) {
+        // All done
+        const message = `Bulk processing complete.\nSuccessful: ${successCount}\nFailed: ${errorCount}`;
+        const fullMessage = errors.length > 0 ? `${message}\n\nErrors:\n${errors.join('\n')}` : message;
+        alert(fullMessage);
+        
+        this.students = this.userService.getStudents();
+        this.filterStudents();
+
+        if (this.selectedStudent) {
+          this.userService.fetchUserById(this.selectedStudent.id).subscribe({
+            next: (freshStudent) => {
+              this.selectedStudent = freshStudent;
+              this.studentReceipts = this.feeService.getReceiptsForStudent(freshStudent.id);
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.studentReceipts = this.feeService.getReceiptsForStudent(this.selectedStudent!.id);
+              this.cdr.markForCheck();
+            }
+          });
+        }
+        
+        this.parsedData = null;
+        return;
+      }
+
+      const record = this.parsedData[index];
       const student = this.userService.getUserById(record.studentId);
+      
       if (student) {
-        // Fixed: Create complete receipt object with studentId
+        const classLabel = this.getStudentClassLabel(student);
+
+        if (!classLabel) {
+          errorCount++;
+          errors.push(`${student.id}: Student is not assigned to a class`);
+          processReceipt(index + 1);
+          return;
+        }
+
         const receipt: Partial<FeeReceipt> = {
           studentId: student.id,
           invoiceNumber: 'BLK-' + Math.floor(Math.random() * 90000),
-          receiptNumber: 'REC-' + Math.floor(Math.random() * 9000),
-          class: student.details.yearSem,
+          receiptNumber: 'REC-' + Date.now() + '-' + index,
+          class: classLabel,
           name: `${student.firstName} ${student.lastName}`.toUpperCase(),
           academicYear: '2024-2025',
           date: this.today,
@@ -200,23 +289,25 @@ export class ManageFeesComponent implements OnInit {
           totalInWords: this.numberToWords(parseInt(record.amount))
         };
         
-        this.feeService.addReceipt(receipt as FeeReceipt);
-        successCount++;
+        this.feeService.addReceipt(receipt).subscribe({
+          next: () => {
+            successCount++;
+            processReceipt(index + 1);
+          },
+          error: (error) => {
+            errorCount++;
+            errors.push(`${student.id}: ${error.error?.message || 'Failed to save'}`);
+            processReceipt(index + 1);
+          }
+        });
       } else {
         errorCount++;
+        errors.push(`${record.studentId}: Student not found`);
+        processReceipt(index + 1);
       }
-    });
+    };
 
-    alert(`Bulk processing complete.\nSuccessful: ${successCount}\nFailed (Student not found): ${errorCount}`);
-    
-    // Refresh if current student was updated
-    setTimeout(() => {
-      if (this.selectedStudent) {
-        this.selectStudent(this.selectedStudent);
-      }
-    }, 300);
-    
-    this.parsedData = null;
+    processReceipt(0);
   }
 
   downloadSampleCsv() {

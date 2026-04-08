@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { User, MenuItem } from '../models/user';
 
 export interface PortalEvent {
@@ -93,6 +93,23 @@ export class UserService {
 
   getUserById(id: string): User | undefined {
     return this.usersSubject.getValue().find(u => (u.id || u._id) === id);
+  }
+
+  fetchUserById(id: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(
+      map(user => this.normalizeUser(user)),
+      tap(user => {
+        const currentUsers = this.usersSubject.getValue();
+        const index = currentUsers.findIndex(u => (u.id || u._id) === id);
+
+        if (index !== -1) {
+          currentUsers[index] = user;
+          this.usersSubject.next([...currentUsers]);
+        } else {
+          this.usersSubject.next([...currentUsers, user]);
+        }
+      })
+    );
   }
 
   getTeachers(): User[] {

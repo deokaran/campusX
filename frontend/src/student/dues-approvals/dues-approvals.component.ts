@@ -1,8 +1,9 @@
 
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { FeeService, FeeReceipt } from '../../services/fee.service';
+import { UserService } from '../../services/user.service';
 import { User } from '../../models/user';
 
 declare var html2canvas: any;
@@ -18,6 +19,8 @@ declare var jspdf: any;
 export class DuesApprovalsComponent implements OnInit {
   authService = inject(AuthService);
   feeService = inject(FeeService);
+  userService = inject(UserService);
+  cdr = inject(ChangeDetectorRef);
   
   student: User | null = null;
   receipts: FeeReceipt[] = [];
@@ -27,7 +30,22 @@ export class DuesApprovalsComponent implements OnInit {
   ngOnInit() {
     this.student = this.authService.currentUserValue;
     if (this.student) {
-      this.receipts = this.feeService.getReceiptsForStudent(this.student.id);
+      this.userService.fetchUserById(this.student.id).subscribe({
+        next: (student) => {
+          this.student = student;
+          this.authService.updateCurrentUser(student);
+          this.cdr.markForCheck();
+        },
+        error: (error) => console.error('Error refreshing student fees:', error)
+      });
+
+      this.feeService.fetchReceiptsForStudent(this.student.id).subscribe({
+        next: (receipts) => {
+          this.receipts = receipts;
+          this.cdr.markForCheck();
+        },
+        error: (error) => console.error('Error loading student receipts:', error)
+      });
     }
   }
 

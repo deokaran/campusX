@@ -55,7 +55,7 @@
                       <button type="button" (click)="removeQuestion(i)" class="btn-close" aria-label="Remove Question"></button>
                     }
                   </div>
-                  <textarea [(ngModel)]="q.text" name="qText{{i}}" required rows="2" class="form-control" placeholder="Enter question text..."></textarea>
+                  <textarea [(ngModel)]="q.question" name="qText{{i}}" required rows="2" class="form-control" placeholder="Enter question text..."></textarea>
                   <div class="row g-3">
                     @for(opt of q.options; track $index; let o_idx = $index) {
                       <div class="col-sm-6">
@@ -68,9 +68,8 @@
                     <div class="col-sm-6">
                       <label class="form-label small">Correct Answer</label>
                       <select [(ngModel)]="q.correctAnswer" name="qAns{{i}}" required class="form-select">
-                        <option value="" disabled>Select the correct option</option>
-                        @for(opt of q.options; track $index) {
-                          @if(opt) { <option [value]="opt">{{opt}}</option> }
+                        @for(opt of q.options; track $index; let o_idx = $index) {
+                          @if(opt) { <option [ngValue]="o_idx">{{opt}}</option> }
                         }
                       </select>
                     </div>

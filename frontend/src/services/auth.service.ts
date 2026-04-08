@@ -20,8 +20,18 @@ export class AuthService {
   ) {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
+      this.currentUserSubject.next(this.normalizeUser(JSON.parse(storedUser)));
     }
+  }
+
+  private normalizeUser(user: User): User {
+    const normalizedId = user.id || user._id || '';
+
+    return {
+      ...user,
+      id: normalizedId,
+      _id: normalizedId
+    };
   }
 
   public get currentUserValue(): User | null {
@@ -50,7 +60,7 @@ export class AuthService {
   }
 
   updateCurrentUser(user: User) {
-    const userToStore = { ...user };
+    const userToStore = this.normalizeUser({ ...user });
     delete userToStore.password;
     this.currentUserSubject.next(userToStore);
     localStorage.setItem('currentUser', JSON.stringify(userToStore));

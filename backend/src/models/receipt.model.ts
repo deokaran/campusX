@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IReceipt {
-  _id: string;
   studentId: string;
   invoiceNumber: string;
   receiptNumber: string;
@@ -16,18 +15,22 @@ export interface IReceipt {
 }
 
 const receiptSchema = new Schema<IReceipt>({
-  _id: { type: String, required: true },
-  studentId: String,
-  invoiceNumber: String,
-  receiptNumber: String,
-  class: String,
-  name: String,
-  academicYear: String,
-  date: Date,
-  paymentMode: String,
-  items: [{ type: Object }],
-  total: Number,
-  totalInWords: String
+  studentId: { type: String, required: true },
+  invoiceNumber: { type: String, required: true },
+  receiptNumber: { type: String, required: true, unique: true },
+  class: { type: String, required: true },
+  name: { type: String, required: true },
+  academicYear: { type: String, required: true },
+  date: { type: Date, required: true },
+  paymentMode: { type: String, required: true },
+  items: [{ 
+    description: { type: String, required: true },
+    amount: { type: Number, required: true }
+  }],
+  total: { type: Number, required: true },
+  totalInWords: { type: String, required: true }
+}, {
+  timestamps: true
 });
 
 export default mongoose.model<IReceipt>('Receipt', receiptSchema);

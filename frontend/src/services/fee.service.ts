@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 
 export interface FeeItem {
   description: string;
@@ -38,8 +39,30 @@ export class FeeService {
 
   private loadReceipts(): void {
     this.http.get<FeeReceipt[]>(this.apiUrl).subscribe(
-      receipts => this.receiptsSubject.next(receipts),
+      receipts => this.receiptsSubject.next(receipts.map(receipt => this.normalizeReceipt(receipt))),
       error => console.error('Error loading receipts:', error)
+    );
+  }
+
+  private normalizeReceipt(receipt: FeeReceipt): FeeReceipt {
+    const normalizedId = receipt._id || receipt.id || '';
+
+    return {
+      ...receipt,
+      _id: normalizedId,
+      id: normalizedId
+    };
+  }
+
+  fetchReceiptsForStudent(studentId: string): Observable<FeeReceipt[]> {
+    return this.http.get<FeeReceipt[]>(`${this.apiUrl}/student/${studentId}`).pipe(
+      map(receipts => receipts.map(receipt => this.normalizeReceipt(receipt))),
+      tap(receipts => {
+        const currentReceipts = this.receiptsSubject
+          .getValue()
+          .filter(receipt => receipt.studentId !== studentId);
+        this.receiptsSubject.next([...currentReceipts, ...receipts]);
+      })
     );
   }
 
@@ -55,16 +78,28 @@ export class FeeService {
     );
   }
 
-  addReceipt(receiptData: FeeReceipt): void {
-    this.http.post<FeeReceipt>(this.apiUrl, receiptData).subscribe({
-      next: (newReceipt) => {
-        const currentReceipts = this.receiptsSubject.getValue();
-        this.receiptsSubject.next([...currentReceipts, newReceipt]);
-      },
-      error: (error) => console.error('Error adding receipt:', error)
-    });
+  addReceipt(receiptData: Partial<FeeReceipt>): Observable<FeeReceipt> {
+  console.log('reached services');
+
+  if (!receiptData.studentId) {
+    throw new Error('Student is required for receipt');
   }
 
+  const payload = {
+    ...receiptData,
+    date:
+      (receiptData.date as any) instanceof Date
+        ? (receiptData.date as any).toISOString()
+        : receiptData.date
+  };
+
+  return this.http.post<FeeReceipt>(this.apiUrl, payload).pipe(
+    tap((newReceipt) => {
+      const currentReceipts = this.receiptsSubject.getValue();
+      this.receiptsSubject.next([...currentReceipts, newReceipt]);
+    })
+  );
+}
   updateReceipt(receiptId: string, updatedData: Partial<FeeReceipt>): void {
     this.http.put<FeeReceipt>(`${this.apiUrl}/${receiptId}`, updatedData).subscribe({
       next: (receipt) => {

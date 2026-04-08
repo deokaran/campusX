@@ -3,6 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import Class from '../models/class.model';
 import User from '../models/user.model';
 
+const syncTeacherAssignments = (classData: any) => {
+  const subjectTeacherIds = (classData.subjects || [])
+    .map((subject: any) => typeof subject?.teacherId === 'string' ? subject.teacherId.trim() : '')
+    .filter(Boolean);
+
+  classData.teacherIds = [...new Set([...(classData.teacherIds || []), ...subjectTeacherIds])];
+};
+
 const syncStudentClassAssignments = async (classId: string, studentIds: string[]) => {
   const uniqueStudentIds = [...new Set((studentIds || []).filter(Boolean))];
 
@@ -28,6 +36,7 @@ const syncStudentClassAssignments = async (classId: string, studentIds: string[]
 export const createClass = async (req: Request, res: Response) => {
   try {
     const classData = { ...req.body };
+    syncTeacherAssignments(classData);
     // classId is the custom user-defined string (e.g. "CS-2024-A")
     if (!classData.classId) {
       return res.status(400).json({ message: 'classId is required' });
@@ -79,6 +88,7 @@ export const getClassById = async (req: Request, res: Response) => {
 export const updateClass = async (req: Request, res: Response) => {
   try {
     const updateData = { ...req.body };
+    syncTeacherAssignments(updateData);
     // Remove _id and frontend id alias from the update payload to avoid immutable field errors
     // classId is kept so it can be updated if needed
     delete updateData._id;

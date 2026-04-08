@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
 import { AttendanceService } from '../../services/attendance.service';
 import { User } from '../../models/user';
 import { AttendanceRecord } from '../../models/attendance';
+import { Subscription } from 'rxjs';
 
 interface EnrichedRecord extends AttendanceRecord {
   totalStudents: number;
@@ -23,7 +24,7 @@ interface EnrichedRecord extends AttendanceRecord {
   styleUrls: ['./attendance.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AttendanceComponent implements OnInit {
+export class AttendanceComponent implements OnInit, OnDestroy {
   classService = inject(ClassService);
   authService = inject(AuthService);
   userService = inject(UserService);
@@ -52,15 +53,30 @@ export class AttendanceComponent implements OnInit {
   historySubjects: any[] = [];
   selectedClassId = 'all';
   selectedSubjectCode = 'all';
+  private classesSub?: Subscription;
   
   ngOnInit() {
     const teacherId = this.authService.currentUserValue?.id || '';
-    this.myClasses = this.classService.getClasses().filter(c => c.teacherIds.includes(teacherId));
-    if (this.myClasses.length > 0) {
-      this.lectureDetails.classId = this.myClasses[0].id;
+    this.classesSub = this.classService.getClassesObservable().subscribe(classes => {
+      this.myClasses = classes.filter(c => this.classService.isTeacherAssignedToClass(c, teacherId));
+
+      if (!this.myClasses.length) {
+        this.lectureDetails.classId = '';
+        this.lectureDetails.subjectCode = '';
+        this.subjects = [];
+        this.cdr.markForCheck();
+        return;
+      }
+
+      const stillSelected = this.myClasses.some(c => c.id === this.lectureDetails.classId);
+      this.lectureDetails.classId = stillSelected ? this.lectureDetails.classId : (this.myClasses[0].id || '');
       this.onClassChange();
-    }
+    });
     this.loadHistory();
+  }
+
+  ngOnDestroy(): void {
+    this.classesSub?.unsubscribe();
   }
 
   onClassChange() {
@@ -125,8 +141,19 @@ export class AttendanceComponent implements OnInit {
             date: this.lectureDetails.date,
             presentStudentIds: Array.from(this.presentStudentIds),
         };
-        this.attendanceService.updateAttendance(updatedRecord);
-        alert(`Attendance updated for ${this.presentStudentIds.size} out of ${this.students.length} students.`);
+        this.attendanceService.updateAttendance(updatedRecord).subscribe({
+          next: () => {
+            alert(`Attendance updated for ${this.presentStudentIds.size} out of ${this.students.length} students.`);
+            this.step = 'details';
+            this.editingRecordId = null;
+            this.loadHistory();
+            this.cdr.markForCheck();
+          },
+          error: (error) => {
+            console.error('Error updating attendance:', error);
+            alert('Error updating attendance: ' + (error.error?.message || error.message));
+          }
+        });
     } else {
         this.attendanceService.saveAttendance({
             classId: this.lectureDetails.classId,
@@ -134,13 +161,20 @@ export class AttendanceComponent implements OnInit {
             date: this.lectureDetails.date,
             presentStudentIds: Array.from(this.presentStudentIds),
             teacherId: teacherId
+        }).subscribe({
+          next: () => {
+            alert(`Attendance saved for ${this.presentStudentIds.size} out of ${this.students.length} students.`);
+            this.step = 'details';
+            this.editingRecordId = null;
+            this.loadHistory();
+            this.cdr.markForCheck();
+          },
+          error: (error) => {
+            console.error('Error saving attendance:', error);
+            alert('Error saving attendance: ' + (error.error?.message || error.message));
+          }
         });
-        alert(`Attendance saved for ${this.presentStudentIds.size} out of ${this.students.length} students.`);
     }
-
-    this.step = 'details';
-    this.editingRecordId = null;
-    this.loadHistory();
   }
 
   backToDetails() {

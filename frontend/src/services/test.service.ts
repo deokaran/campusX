@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 
 export interface Question {
   id?: string;
@@ -9,6 +9,7 @@ export interface Question {
   options: string[];
   correctAnswer: number;  // Index of correct answer (0-3)
   marks: number;
+  explanation?: string;
 }
 
 export interface Test {
@@ -52,9 +53,19 @@ export class TestService {
     this.loadSubmissions();
   }
 
+  private normalizeTest(test: Test): Test {
+    const normalizedId = test._id || test.id || '';
+
+    return {
+      ...test,
+      _id: normalizedId,
+      id: normalizedId
+    };
+  }
+
   private loadTests(): void {
     this.http.get<Test[]>(this.apiUrl).subscribe(
-      tests => this.testsSubject.next(tests),
+      tests => this.testsSubject.next(tests.map(test => this.normalizeTest(test))),
       error => console.error('Error loading tests:', error)
     );
   }
@@ -66,14 +77,14 @@ export class TestService {
     );
   }
   
-  saveTest(testData: any): void {
-    this.http.post<Test>(this.apiUrl, testData).subscribe({
-      next: (newTest) => {
+  saveTest(testData: any): Observable<Test> {
+    return this.http.post<Test>(this.apiUrl, testData).pipe(
+      map(test => this.normalizeTest(test)),
+      tap((newTest) => {
         const currentTests = this.testsSubject.getValue();
         this.testsSubject.next([...currentTests, newTest]);
-      },
-      error: (error) => console.error('Error saving test:', error)
-    });
+      })
+    );
   }
   
   getTeacherTests(teacherId: string): Observable<Test[]> {
@@ -84,7 +95,7 @@ export class TestService {
   
   getTestsForClass(classId: string): Observable<Test[]> {
     return this.tests$.pipe(
-      map(tests => tests.filter(t => t.classId === classId && t.status !== 'draft'))
+      map(tests => tests.filter(t => t.classId === classId && String(t.status || '').toLowerCase() !== 'draft'))
     );
   }
 
@@ -95,7 +106,9 @@ export class TestService {
 
   // OBSERVABLE METHOD
   getTestByIdObservable(testId: string): Observable<Test | undefined> {
-    return this.http.get<Test>(`${this.apiUrl}/${testId}`);
+    return this.http.get<Test>(`${this.apiUrl}/${testId}`).pipe(
+      map(test => this.normalizeTest(test))
+    );
   }
 
   submitTest(submission: Partial<TestSubmission>): void {
@@ -140,7 +153,7 @@ export class TestService {
         const currentTests = this.testsSubject.getValue();
         const index = currentTests.findIndex(t => (t._id || t.id) === testId);
         if (index !== -1) {
-          currentTests[index] = updatedTest;
+          currentTests[index] = this.normalizeTest(updatedTest);
           this.testsSubject.next([...currentTests]);
         }
       },
@@ -154,7 +167,7 @@ export class TestService {
         const currentTests = this.testsSubject.getValue();
         const index = currentTests.findIndex(t => (t._id || t.id) === testId);
         if (index !== -1) {
-          currentTests[index] = updatedTest;
+          currentTests[index] = this.normalizeTest(updatedTest);
           this.testsSubject.next([...currentTests]);
         }
       },
@@ -168,7 +181,7 @@ export class TestService {
         const currentTests = this.testsSubject.getValue();
         const index = currentTests.findIndex(t => (t._id || t.id) === testId);
         if (index !== -1) {
-          currentTests[index] = updatedTest;
+          currentTests[index] = this.normalizeTest(updatedTest);
           this.testsSubject.next([...currentTests]);
         }
       },
@@ -182,7 +195,7 @@ export class TestService {
         const currentTests = this.testsSubject.getValue();
         const index = currentTests.findIndex(t => (t._id || t.id) === testId);
         if (index !== -1) {
-          currentTests[index] = updatedTest;
+          currentTests[index] = this.normalizeTest(updatedTest);
           this.testsSubject.next([...currentTests]);
         }
       },
@@ -210,7 +223,7 @@ export class TestService {
         const currentTests = this.testsSubject.getValue();
         const index = currentTests.findIndex(t => (t._id || t.id) === testId);
         if (index !== -1) {
-          currentTests[index] = updatedTest;
+          currentTests[index] = this.normalizeTest(updatedTest);
           this.testsSubject.next([...currentTests]);
         }
       },

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { AttendanceRecord } from '../models/attendance';
 
 @Injectable({ providedIn: 'root' })
@@ -21,35 +21,32 @@ export class AttendanceService {
     );
   }
 
-  saveAttendance(record: Omit<AttendanceRecord, 'id' | 'createdAt'>): void {
-    this.http.post<AttendanceRecord>(this.apiUrl, record).subscribe({
-      next: (newRecord) => {
+  saveAttendance(record: Omit<AttendanceRecord, 'id' | 'createdAt'>): Observable<AttendanceRecord> {
+    return this.http.post<AttendanceRecord>(this.apiUrl, record).pipe(
+      tap((newRecord) => {
         const currentRecords = this.attendanceRecordsSubject.getValue();
         this.attendanceRecordsSubject.next([...currentRecords, newRecord]);
-      },
-      error: (error) => console.error('Error saving attendance:', error)
-    });
+      })
+    );
   }
   
   // BACKWARD COMPATIBLE - accepts just the record (uses record.id internally)
-  updateAttendance(updatedRecord: AttendanceRecord): void {
+  updateAttendance(updatedRecord: AttendanceRecord): Observable<AttendanceRecord> {
     const recordId = updatedRecord.id;
     if (!recordId) {
-      console.error('Cannot update attendance: no record ID');
-      return;
+      throw new Error('Cannot update attendance: no record ID');
     }
     
-    this.http.put<AttendanceRecord>(`${this.apiUrl}/${recordId}`, updatedRecord).subscribe({
-      next: (record) => {
+    return this.http.put<AttendanceRecord>(`${this.apiUrl}/${recordId}`, updatedRecord).pipe(
+      tap((record) => {
         const currentRecords = this.attendanceRecordsSubject.getValue();
         const index = currentRecords.findIndex(r => r.id === recordId);
         if (index !== -1) {
           currentRecords[index] = record;
           this.attendanceRecordsSubject.next([...currentRecords]);
         }
-      },
-      error: (error) => console.error('Error updating attendance:', error)
-    });
+      })
+    );
   }
 
   getRecordsByTeacher(teacherId: string): Observable<AttendanceRecord[]> {

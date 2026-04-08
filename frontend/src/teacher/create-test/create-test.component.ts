@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TestService, Question } from '../../services/test.service';
 import { ClassService } from '../../services/class.service';
 import { AuthService } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-create-test',
@@ -12,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./create-test.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateTestComponent implements OnInit {
+export class CreateTestComponent implements OnInit, OnDestroy {
   testService = inject(TestService);
   classService = inject(ClassService);
   authService = inject(AuthService);
@@ -21,6 +22,7 @@ export class CreateTestComponent implements OnInit {
   myClasses: any[] = [];
   subjects: any[] = [];
   currentStep = 1;
+  private classesSub?: Subscription;
 
   test = {
     title: '',
@@ -41,11 +43,25 @@ export class CreateTestComponent implements OnInit {
 
   ngOnInit() {
     const teacherId = this.authService.currentUserValue?.id || '';
-    this.myClasses = this.classService.getClasses().filter(c => c.teacherIds.includes(teacherId));
-    if (this.myClasses.length > 0) {
-      this.test.classId = this.myClasses[0].id;
-      this.onClassChange(this.myClasses[0].id);
-    }
+    this.classesSub = this.classService.getClassesObservable().subscribe(classes => {
+      this.myClasses = classes.filter(c => this.classService.isTeacherAssignedToClass(c, teacherId));
+
+      if (!this.myClasses.length) {
+        this.test.classId = '';
+        this.test.subject = '';
+        this.subjects = [];
+        this.cdr.markForCheck();
+        return;
+      }
+
+      const stillSelected = this.myClasses.some(c => c.id === this.test.classId);
+      const nextClassId = stillSelected ? this.test.classId : (this.myClasses[0].id || '');
+      this.onClassChange(nextClassId);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.classesSub?.unsubscribe();
   }
 
   onClassChange(classId: string) {
@@ -93,26 +109,30 @@ export class CreateTestComponent implements OnInit {
   createTest() {
     this.test.createdBy = this.authService.currentUserValue?.id || '';
     const testPayload = { ...this.test, questions: this.questions };
-    this.testService.saveTest(testPayload);
-    
-    alert('Test created successfully!');
-    // Reset form
-    this.test = { 
-      title: '', 
-      subject: this.subjects[0]?.code || '', 
-      classId: this.myClasses[0]?.id || '', 
-      createdBy: '', 
-      status: 'Draft', 
-      resultsPublished: false 
-    };
-    // Fixed: correctAnswer is number
-    this.questions = [{ 
-      question: '', 
-      options: ['', '', '', ''], 
-      correctAnswer: 0, 
-      marks: 10 
-    }];
-    this.currentStep = 1;
-    this.cdr.markForCheck();
+    this.testService.saveTest(testPayload).subscribe({
+      next: () => {
+        alert('Test created successfully!');
+        this.test = { 
+          title: '', 
+          subject: this.subjects[0]?.code || '', 
+          classId: this.myClasses[0]?.id || '', 
+          createdBy: '', 
+          status: 'Draft', 
+          resultsPublished: false 
+        };
+        this.questions = [{ 
+          question: '', 
+          options: ['', '', '', ''], 
+          correctAnswer: 0, 
+          marks: 10 
+        }];
+        this.currentStep = 1;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error creating test:', error);
+        alert('Error creating test: ' + (error.error?.message || error.message));
+      }
+    });
   }
 }
