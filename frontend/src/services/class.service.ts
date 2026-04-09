@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, map, tap } from 'rxjs';
 
 export interface ClassData {
   classId?: string;
@@ -123,7 +123,13 @@ export class ClassService {
   }
 
   getStudentsByClass(classId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${classId}/students`);
+    return this.http.get<any[]>(`${this.apiUrl}/${classId}/students`).pipe(
+      map(students => students.map(student => ({
+        ...student,
+        id: student.id || student._id || '',
+        _id: student._id || student.id || ''
+      })))
+    );
   }
 
   removeStudentFromAllClasses(studentId: string): void {

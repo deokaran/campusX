@@ -1,8 +1,9 @@
 
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ClassService } from '../../services/class.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-time-table',
@@ -11,24 +12,40 @@ import { ClassService } from '../../services/class.service';
   styleUrls: ['./time-table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TimeTableComponent implements OnInit {
+export class TimeTableComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   classService = inject(ClassService);
+  cdr = inject(ChangeDetectorRef);
   
   schedule: any[] = [];
   subjects: any[] = [];
   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  private currentClassId = '';
+  private subscriptions = new Subscription();
 
   ngOnInit() {
-    const student = this.authService.currentUserValue;
-    if (student && student.details.classId) {
-      const classData = this.classService.getClassById(student.details.classId);
-      if (classData) {
-        this.schedule = classData.timeTable || [];
-        this.subjects = classData.subjects || [];
-      }
-    }
+    this.subscriptions.add(this.authService.currentUser$.subscribe(student => {
+      this.currentClassId = student?.details?.classId || '';
+      this.loadTimeTable();
+    }));
+    this.subscriptions.add(this.classService.getClassesObservable().subscribe(() => {
+      this.loadTimeTable();
+    }));
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private loadTimeTable() {
+    const classData = this.currentClassId
+      ? this.classService.getClassById(this.currentClassId)
+      : undefined;
+
+    this.schedule = classData?.timeTable || [];
+    this.subjects = classData?.subjects || [];
+    this.cdr.markForCheck();
   }
 
   getSubjectName(code: string): string {

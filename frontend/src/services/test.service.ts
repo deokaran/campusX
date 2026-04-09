@@ -63,6 +63,16 @@ export class TestService {
     };
   }
 
+  private normalizeSubmission(submission: TestSubmission): TestSubmission {
+    const normalizedId = submission._id || submission.id || '';
+
+    return {
+      ...submission,
+      _id: normalizedId,
+      id: normalizedId
+    };
+  }
+
   private loadTests(): void {
     this.http.get<Test[]>(this.apiUrl).subscribe(
       tests => this.testsSubject.next(tests.map(test => this.normalizeTest(test))),
@@ -72,7 +82,7 @@ export class TestService {
 
   private loadSubmissions(): void {
     this.http.get<TestSubmission[]>(this.submissionsApiUrl).subscribe(
-      submissions => this.submissionsSubject.next(submissions),
+      submissions => this.submissionsSubject.next(submissions.map(submission => this.normalizeSubmission(submission))),
       error => console.error('Error loading submissions:', error)
     );
   }
@@ -111,14 +121,14 @@ export class TestService {
     );
   }
 
-  submitTest(submission: Partial<TestSubmission>): void {
-    this.http.post<TestSubmission>(this.submissionsApiUrl, submission).subscribe({
-      next: (newSubmission) => {
+  submitTest(submission: Partial<TestSubmission>): Observable<TestSubmission> {
+    return this.http.post<TestSubmission>(this.submissionsApiUrl, submission).pipe(
+      map(newSubmission => this.normalizeSubmission(newSubmission)),
+      tap((newSubmission) => {
         const currentSubmissions = this.submissionsSubject.getValue();
         this.submissionsSubject.next([...currentSubmissions, newSubmission]);
-      },
-      error: (error) => console.error('Error submitting test:', error)
-    });
+      })
+    );
   }
 
   // BACKWARD COMPATIBLE SYNCHRONOUS METHOD

@@ -53,7 +53,10 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   historySubjects: any[] = [];
   selectedClassId = 'all';
   selectedSubjectCode = 'all';
+  private rawRecords: AttendanceRecord[] = [];
   private classesSub?: Subscription;
+  private usersSub?: Subscription;
+  private historySub?: Subscription;
   
   ngOnInit() {
     const teacherId = this.authService.currentUserValue?.id || '';
@@ -71,12 +74,24 @@ export class AttendanceComponent implements OnInit, OnDestroy {
       const stillSelected = this.myClasses.some(c => c.id === this.lectureDetails.classId);
       this.lectureDetails.classId = stillSelected ? this.lectureDetails.classId : (this.myClasses[0].id || '');
       this.onClassChange();
+      if (this.rawRecords.length > 0) {
+        this.allRecords = this.rawRecords.map(record => this.enrichRecord(record));
+        this.applyFilters();
+      }
+    });
+    this.usersSub = this.userService.getUsersObservable().subscribe(() => {
+      if (this.rawRecords.length > 0) {
+        this.allRecords = this.rawRecords.map(record => this.enrichRecord(record));
+        this.applyFilters();
+      }
     });
     this.loadHistory();
   }
 
   ngOnDestroy(): void {
     this.classesSub?.unsubscribe();
+    this.usersSub?.unsubscribe();
+    this.historySub?.unsubscribe();
   }
 
   onClassChange() {
@@ -193,7 +208,9 @@ export class AttendanceComponent implements OnInit, OnDestroy {
   
   loadHistory() {
      const teacherId = this.authService.currentUserValue?.id || '';
-     this.attendanceService.getRecordsByTeacher(teacherId).subscribe(records => {
+     this.historySub?.unsubscribe();
+     this.historySub = this.attendanceService.getRecordsByTeacher(teacherId).subscribe(records => {
+      this.rawRecords = records;
       this.allRecords = records.map(record => this.enrichRecord(record));
       this.applyFilters();
       this.cdr.markForCheck();

@@ -1,10 +1,11 @@
 
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { User } from '../../models/user';
+import { Subscription } from 'rxjs';
 
 declare var html2canvas: any;
 declare var jspdf: any;
@@ -16,9 +17,10 @@ declare var jspdf: any;
   styleUrls: ['./semester-results.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SemesterResultsComponent implements OnInit {
+export class SemesterResultsComponent implements OnInit, OnDestroy {
   userService = inject(UserService);
   authService = inject(AuthService);
+  cdr = inject(ChangeDetectorRef);
   
   student: User | null = null;
   allResults: any[] = [];
@@ -29,13 +31,24 @@ export class SemesterResultsComponent implements OnInit {
   totalInternal = 0;
   totalExternal = 0;
   grandTotal = 0;
+  private resultsSub?: Subscription;
 
   ngOnInit() {
     this.student = this.authService.currentUserValue;
     if (this.student) {
-      this.allResults = this.userService.getStudentResults(this.student.id);
-      this.semesters = this.allResults.map(r => r.semester).sort((a, b) => a - b);
+      this.resultsSub = this.userService.getStudentResultsObservable(this.student.id).subscribe(results => {
+        this.allResults = results;
+        this.semesters = this.allResults.map(r => r.semester).sort((a, b) => a - b);
+        if (this.selectedSemester !== null) {
+          this.selectSemester(this.selectedSemester);
+        }
+        this.cdr.markForCheck();
+      });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.resultsSub?.unsubscribe();
   }
 
   selectSemester(semester: number) {

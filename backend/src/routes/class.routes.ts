@@ -3,6 +3,7 @@ import {
   createClass,
   getClasses,
   getClassById,
+  getStudentsByClass,
   updateClass,
   deleteClass
 } from '../controllers/class.controller';
@@ -16,6 +17,9 @@ router.post('/', verifyToken, authorizeRoles('A'), createClass);
 
 // 🔹 Get all classes
 router.get('/', verifyToken, getClasses);
+
+// 🔹 Get students by class
+router.get('/:id/students', verifyToken, getStudentsByClass);
 
 // 🔹 Get class by ID
 router.get('/:id', verifyToken, getClassById);

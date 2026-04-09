@@ -107,14 +107,11 @@
                             <a [routerLink]="['/teacher/student-results', student.id]" class="btn btn-sm btn-outline-primary me-2" title="View Results">
                                 <i class="fas fa-graduation-cap"></i>
                             </a>
-                            <a [routerLink]="['/teacher/my-classes', classData.id, 'edit-student', student.id]" class="btn btn-sm btn-outline-warning" title="Edit Student">
-                                <i class="fas fa-pencil-alt"></i>
-                            </a>
                         </td>
                     </tr>
                     } @empty {
                         <tr>
-                            <td colspan="5" class="text-center text-muted p-4">No students are enrolled in this class.</td>
+                            <td colspan="6" class="text-center text-muted p-4">No students are enrolled in this class.</td>
                         </tr>
                     }
                 </tbody>

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TestService, Test, TestSubmission } from '../../services/test.service';
 import { ClassService } from '../../services/class.service';
+import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { Subscription, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -27,6 +28,7 @@ export class ClassPerformanceComponent implements OnInit, OnDestroy, AfterViewIn
   route: ActivatedRoute = inject(ActivatedRoute);
   classService = inject(ClassService);
   testService = inject(TestService);
+  authService = inject(AuthService);
   userService = inject(UserService);
   cdr = inject(ChangeDetectorRef);
 
@@ -39,18 +41,25 @@ export class ClassPerformanceComponent implements OnInit, OnDestroy, AfterViewIn
   performanceData: PerformanceData[] = [];
   
   private routeSub!: Subscription;
+  private classesSub?: Subscription;
+  private performanceSub?: Subscription;
 
   ngOnInit(): void {
     this.routeSub = this.route.params.subscribe(params => {
       this.classId = params['classId'];
+      const teacherId = this.authService.currentUserValue?.id || '';
+      if (this.classId && teacherId) {
+        this.classTests$ = this.testService.getTeacherTests(teacherId).pipe(
+          map(tests => tests.filter(t => t.classId === this.classId && String(t.status || '').toLowerCase() !== 'draft'))
+        );
+      }
+      this.classesSub?.unsubscribe();
+      this.classesSub = this.classService.getClassesObservable().subscribe(() => {
+        this.className = this.classService.getClassById(this.classId)?.name || '';
+        this.cdr.markForCheck();
+      });
       if (this.classId) {
         this.className = this.classService.getClassById(this.classId)?.name || '';
-        const firstTeacherId = this.classService.getClassById(this.classId)?.teacherIds[0];
-        if (firstTeacherId) {
-          this.classTests$ = this.testService.getTeacherTests(firstTeacherId).pipe(
-            map(tests => tests.filter(t => t.classId === this.classId && t.status !== 'Draft'))
-          );
-        }
       }
     });
   }
@@ -61,6 +70,8 @@ export class ClassPerformanceComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnDestroy(): void {
     if (this.routeSub) this.routeSub.unsubscribe();
+    this.classesSub?.unsubscribe();
+    this.performanceSub?.unsubscribe();
   }
 
   onTestSelect(event: Event): void {
@@ -72,24 +83,23 @@ export class ClassPerformanceComponent implements OnInit, OnDestroy, AfterViewIn
       return;
     }
     
-    // Fixed: Get submissions as array (already synchronous)
-    const submissions = this.testService.getSubmissionsForTest(testId);
-    
-    // Fixed: Subscribe to getStudentsByClass observable
-    this.classService.getStudentsByClass(this.classId).subscribe(students => {
-      this.performanceData = students
-        .map(student => {
-          const submission = submissions.find(s => s.studentId === student.id);
-          return {
-            rollNo: student.details.rollNo,
-            score: submission ? submission.score : 0,
-            studentName: `${student.firstName} ${student.lastName}`
-          };
-        })
-        .sort((a, b) => a.rollNo - b.rollNo);
-        
-      this.createChart();
-      this.cdr.markForCheck();
+    this.performanceSub?.unsubscribe();
+    this.performanceSub = this.testService.getSubmissionsForTestObservable(testId).subscribe(submissions => {
+      this.classService.getStudentsByClass(this.classId).subscribe(students => {
+        this.performanceData = students
+          .map(student => {
+            const submission = submissions.find(s => s.studentId === student.id);
+            return {
+              rollNo: student.details.rollNo,
+              score: submission ? submission.score : 0,
+              studentName: `${student.firstName} ${student.lastName}`
+            };
+          })
+          .sort((a, b) => a.rollNo - b.rollNo);
+          
+        this.createChart();
+        this.cdr.markForCheck();
+      });
     });
   }
   

@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { AttendanceService } from '../../services/attendance.service';
 import { ClassService } from '../../services/class.service';
@@ -30,6 +30,10 @@ export class StudentOverviewComponent implements OnInit {
   attendanceData$ = this.attendanceDataSubject.asObservable();
   
   notices$: Observable<Notice[]>;
+  private subscriptions = new Subscription();
+  private attendanceSub?: Subscription;
+  private currentStudentId = '';
+  private currentClassId = '';
 
   constructor(
     private authService: AuthService,
@@ -44,37 +48,52 @@ export class StudentOverviewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.student$.subscribe(student => {
+    this.subscriptions.add(this.student$.subscribe(student => {
       if (student) {
-        if (student.details.classId) {
-          this.loadAttendanceData(student.id, student.details.classId);
+        this.currentStudentId = student.id;
+        this.currentClassId = student.details?.classId || '';
+
+        if (this.currentClassId) {
+          this.loadAttendanceData(this.currentStudentId, this.currentClassId);
         }
-        this.loadMarksData(student.id);
+        this.loadMarksData(this.currentStudentId);
       }
-    });
+    }));
+
+    this.subscriptions.add(this.classService.getClassesObservable().subscribe(() => {
+      if (this.currentStudentId && this.currentClassId) {
+        this.loadAttendanceData(this.currentStudentId, this.currentClassId);
+      }
+    }));
+  }
+
+  ngOnDestroy(): void {
+    this.attendanceSub?.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   private loadMarksData(studentId: string): void {
-    const results = this.userService.getStudentResults(studentId);
-    
-    this.marksData = results.map((result, index) => {
-      const totalMarksObtained = result.subjects.reduce((acc: number, subject: any) => acc + (subject.total || 0), 0);
-      const totalMaximumMarks = result.subjects.reduce((acc: number, subject: any) => acc + (subject.totalMax || 0), 0);
-      
-      const percentage = totalMaximumMarks > 0 ? Math.round((totalMarksObtained / totalMaximumMarks) * 100) : 0;
+    this.subscriptions.add(this.userService.getStudentResultsObservable(studentId).subscribe(results => {
+      this.marksData = results.map((result, index) => {
+        const totalMarksObtained = result.subjects.reduce((acc: number, subject: any) => acc + (subject.total || 0), 0);
+        const totalMaximumMarks = result.subjects.reduce((acc: number, subject: any) => acc + (subject.totalMax || 0), 0);
+        
+        const percentage = totalMaximumMarks > 0 ? Math.round((totalMarksObtained / totalMaximumMarks) * 100) : 0;
 
-      return {
-        label: `S${result.semester}`,
-        value: percentage,
-        color: index % 2 === 0 ? 'bg-danger' : 'bg-info'
-      };
-    });
-    
-    this.cdr.markForCheck();
+        return {
+          label: `S${result.semester}`,
+          value: percentage,
+          color: index % 2 === 0 ? 'bg-danger' : 'bg-info'
+        };
+      });
+      
+      this.cdr.markForCheck();
+    }));
   }
 
   loadAttendanceData(studentId: string, classId: string) {
-    this.attendanceService.getRecordsByClass(classId).subscribe(records => {
+    this.attendanceSub?.unsubscribe();
+    this.attendanceSub = this.attendanceService.getRecordsByClass(classId).subscribe(records => {
       const subjects = this.classService.getSubjectsForClass(classId);
       let totalHeld = 0;
       let totalAttended = 0;
@@ -92,6 +111,7 @@ export class StudentOverviewComponent implements OnInit {
         attended: totalAttended,
         percentage
       });
+      this.cdr.markForCheck();
     });
   }
 }

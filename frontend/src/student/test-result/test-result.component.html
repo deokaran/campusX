@@ -37,7 +37,7 @@
                 [class.border-danger-subtle]="!isCorrect(i)"
                 [class.bg-danger-subtle]="!isCorrect(i)">
               <div class="d-flex justify-content-between align-items-start">
-                <p class="fw-semibold text-dark flex-grow-1">{{ i + 1 }}. {{ question.text }}</p>
+                <p class="fw-semibold text-dark flex-grow-1">{{ i + 1 }}. {{ question.question || question.text }}</p>
                 <span class="ms-4 small fw-bold"
                       [class.text-success-emphasis]="isCorrect(i)"
                       [class.text-danger-emphasis]="!isCorrect(i)">
@@ -45,8 +45,8 @@
                 </span>
               </div>
               <div class="mt-3 small vstack gap-2">
-                <p><strong class="fw-medium text-muted">Your Answer:</strong> <span class="text-dark">{{ submission.answers[i] || 'Not Answered' }}</span></p>
-                <p><strong class="fw-medium text-muted">Correct Answer:</strong> <span class="text-dark">{{ question.correctAnswer }}</span></p>
+                <p><strong class="fw-medium text-muted">Your Answer:</strong> <span class="text-dark">{{ getAnswerLabel(i) }}</span></p>
+                <p><strong class="fw-medium text-muted">Correct Answer:</strong> <span class="text-dark">{{ getCorrectAnswerLabel(i) }}</span></p>
               </div>
               @if(question.explanation) {
                 <div class="mt-3 pt-3 border-top small"

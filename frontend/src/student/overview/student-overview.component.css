@@ -1,15 +1,16 @@
+
 @keyframes grow {
   from {
-    transform: scaleX(0);
+    transform: scaleY(0);
   }
   to {
-    transform: scaleX(1);
+    transform: scaleY(1);
   }
 }
 
 .bar-animation {
-  transform-origin: left;
-  animation: grow 0.7s ease-out forwards;
+  transform-origin: bottom;
+  animation: grow 0.5s ease-out forwards;
 }
 
 @keyframes donut-segment-fill {

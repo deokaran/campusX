@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { User } from '../../models/user';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { ClassService } from '../../services/class.service';
 import { DepartmentService } from '../../services/department.service';
@@ -24,7 +24,7 @@ interface DepartmentStat {
   styleUrls: ['./admin-overview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminOverviewComponent implements OnInit {
+export class AdminOverviewComponent implements OnInit, OnDestroy {
   admin$: Observable<User | null>;
   notices$: Observable<Notice[]>;
 
@@ -39,6 +39,7 @@ export class AdminOverviewComponent implements OnInit {
   feesPaidPercentage = 0;
 
   departmentStats: DepartmentStat[] = [];
+  private subscriptions = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -53,6 +54,17 @@ export class AdminOverviewComponent implements OnInit {
   }
   
   ngOnInit(): void {
+    this.subscriptions.add(this.userService.getUsersObservable().subscribe(() => this.refreshOverview()));
+    this.subscriptions.add(this.classService.getClassesObservable().subscribe(() => this.refreshOverview()));
+    this.subscriptions.add(this.departmentService.getDepartmentsObservable().subscribe(() => this.refreshOverview()));
+    this.refreshOverview();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private refreshOverview(): void {
     const students = this.userService.getStudents();
     const teachers = this.userService.getTeachers();
     const classes = this.classService.getClasses();
@@ -63,8 +75,11 @@ export class AdminOverviewComponent implements OnInit {
     this.totalClasses = classes.length;
     this.totalDepartments = departments.length;
 
+    this.totalFeesPaid = 0;
+    this.totalFeesDue = 0;
+
     students.forEach(student => {
-      if (student.details.fees) {
+      if (student.details?.fees) {
         this.totalFeesPaid += parseInt(student.details.fees.paid?.toString() || '0');
         this.totalFeesDue += parseInt(student.details.fees.due?.toString() || '0');
       }
@@ -80,10 +95,12 @@ export class AdminOverviewComponent implements OnInit {
   private calculateDepartmentStats(students: User[]): void {
     const departmentCounts: { [key: string]: number } = {};
     const departments = this.departmentService.getDepartments();
-    const deptMap = new Map(departments.map(d => [d.id, d.name]));
+    const deptMap = new Map(
+      departments.map(d => [String(d.id || d._id || '').trim(), d.name])
+    );
 
     students.forEach(student => {
-      const deptId = student.details.departmentId;
+      const deptId = String(student.details?.departmentId || '').trim();
       const deptName = deptId ? deptMap.get(deptId) || 'Unknown' : 'N/A';
       departmentCounts[deptName] = (departmentCounts[deptName] || 0) + 1;
     });

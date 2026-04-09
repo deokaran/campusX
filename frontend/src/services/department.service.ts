@@ -16,11 +16,21 @@ export class DepartmentService {
     this.loadDepartments();
   }
 
+  private normalizeDepartment(department: Department): Department {
+    const normalizedId = department.id || department._id || '';
+
+    return {
+      ...department,
+      id: normalizedId,
+      _id: normalizedId
+    };
+  }
+
   private loadDepartments(): void {
     this.http.get<Department[]>(this.apiUrl).subscribe({
       next: (departments) => {
         console.log('Loaded departments from backend:', departments);
-        this.departmentsSubject.next(departments);
+        this.departmentsSubject.next(departments.map(department => this.normalizeDepartment(department)));
       },
       error: (error) => console.error('Error loading departments:', error)
     });
@@ -48,7 +58,7 @@ export class DepartmentService {
         next: (newDept) => {
           console.log('Department added successfully:', newDept);
           const currentDepts = this.departmentsSubject.getValue();
-          this.departmentsSubject.next([...currentDepts, newDept]);
+          this.departmentsSubject.next([...currentDepts, this.normalizeDepartment(newDept)]);
         },
         error: (error) => console.error('Error adding department:', error)
       })
@@ -66,7 +76,7 @@ export class DepartmentService {
           const currentDepts = this.departmentsSubject.getValue();
           const index = currentDepts.findIndex(d => (d.id || d._id) === deptId);
           if (index !== -1) {
-            currentDepts[index] = dept;
+            currentDepts[index] = this.normalizeDepartment(dept);
             this.departmentsSubject.next([...currentDepts]);
           }
         },

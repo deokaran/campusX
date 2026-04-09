@@ -23,7 +23,7 @@ export class TakeTestComponent implements OnInit, OnDestroy {
 
   test: Test | null = null;
   currentQuestionIndex = 0;
-  answers: { [key: number]: number } = {};  // Changed to number for answer index
+  answers: { [key: number]: string | number } = {};
   
   private routeSub!: Subscription;
 
@@ -31,8 +31,10 @@ export class TakeTestComponent implements OnInit, OnDestroy {
     this.routeSub = this.route.params.subscribe(params => {
       const id = params['id'];
       if (id) {
-        this.test = this.testService.getTestById(id);
-        this.cdr.markForCheck();
+        this.testService.getTestByIdObservable(id).subscribe(test => {
+          this.test = test || null;
+          this.cdr.markForCheck();
+        });
       }
     });
   }
@@ -43,6 +45,30 @@ export class TakeTestComponent implements OnInit, OnDestroy {
 
   get currentQuestion() {
     return this.test!.questions[this.currentQuestionIndex];
+  }
+
+  private getSelectedAnswerIndex(selectedAnswer: string | number | undefined): number | null {
+    if (selectedAnswer === undefined || selectedAnswer === null || selectedAnswer === '') {
+      return null;
+    }
+
+    const answerIndex = Number(selectedAnswer);
+    return Number.isInteger(answerIndex) ? answerIndex : null;
+  }
+
+  private isCorrectAnswer(question: any, selectedAnswer: string | number | undefined): boolean {
+    const selectedAnswerIndex = this.getSelectedAnswerIndex(selectedAnswer);
+
+    if (selectedAnswerIndex === null) {
+      return false;
+    }
+
+    if (typeof question.correctAnswer === 'number') {
+      return selectedAnswerIndex === question.correctAnswer;
+    }
+
+    const selectedOption = question.options?.[selectedAnswerIndex];
+    return selectedOption === question.correctAnswer;
   }
 
   nextQuestion() {
@@ -68,7 +94,7 @@ export class TakeTestComponent implements OnInit, OnDestroy {
       
       this.test.questions.forEach((q, index) => {
         totalMarks += q.marks;
-        if (this.answers[index] === q.correctAnswer) {
+        if (this.isCorrectAnswer(q, this.answers[index])) {
           score += q.marks;
         }
       });
@@ -81,10 +107,16 @@ export class TakeTestComponent implements OnInit, OnDestroy {
         score: score,
         totalMarks: totalMarks,
         submittedAt: new Date()
+      }).subscribe({
+        next: () => {
+          alert('Test submitted successfully!');
+          this.router.navigate(['/student/tests']);
+        },
+        error: (error) => {
+          console.error('Error submitting test:', error);
+          alert('Error submitting test: ' + (error.error?.message || error.message));
+        }
       });
-      
-      alert('Test submitted successfully!');
-      this.router.navigate(['/student/tests']);
     } else {
       alert('An error occurred. Could not submit test.');
     }

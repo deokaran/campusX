@@ -22,11 +22,19 @@ export class ManageTestsComponent implements OnInit, OnDestroy {
   myTests: Test[] = [];
   testToDelete: Test | null = null;
   private testsSub!: Subscription;
+  private submissionsSub?: Subscription;
+  private classesSub?: Subscription;
 
   ngOnInit() {
     const teacherId = this.authService.currentUserValue?.id || '';
     this.testsSub = this.testService.getTeacherTests(teacherId).subscribe(tests => {
       this.myTests = tests;
+      this.cdr.markForCheck();
+    });
+    this.submissionsSub = this.testService.submissions$.subscribe(() => {
+      this.cdr.markForCheck();
+    });
+    this.classesSub = this.classService.getClassesObservable().subscribe(() => {
       this.cdr.markForCheck();
     });
   }
@@ -35,6 +43,8 @@ export class ManageTestsComponent implements OnInit, OnDestroy {
     if (this.testsSub) {
       this.testsSub.unsubscribe();
     }
+    this.submissionsSub?.unsubscribe();
+    this.classesSub?.unsubscribe();
   }
 
   getClassName(classId: string): string {
